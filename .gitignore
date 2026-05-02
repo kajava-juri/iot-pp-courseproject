@@ -17,6 +17,9 @@ build/
 .piolibdeps/
 **/.pio/
 
+# Go binaries
+server/backend/backend
+
 # Docker volumes / runtime data
 server/mosquitto/data/
 server/mosquitto/log/
