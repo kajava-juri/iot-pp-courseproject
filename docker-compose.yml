@@ -1,17 +1,28 @@
 services:
-  # ── Svelte UI (Node.js dev server) ──────────────────────────────────────────
-  svelte-ui:
+  # ── SvelteKit Frontend ──────────────────────────────────────────────────────
+  frontend:
     build:
-      context: ./server/svelte-ui
+      context: ./server/frontend
       dockerfile: Dockerfile
-    container_name: svelte-ui
+    container_name: frontend
     ports:
-      - "5173:5173"
-    volumes:
-      - ./server/svelte-ui:/app
-      - /app/node_modules
+      - "3000:3000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
+    networks:
+      - iot-network
+    depends_on:
+      - backend
+      - mosquitto
+
+  # ── Go Backend ───────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./server/backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "8080:8080"
     networks:
       - iot-network
     depends_on:
