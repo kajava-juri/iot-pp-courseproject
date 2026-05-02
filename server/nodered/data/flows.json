@@ -1,0 +1,71 @@
+[
+    {
+        "id": "tab-iot",
+        "type": "tab",
+        "label": "IoT Flow",
+        "disabled": false,
+        "info": "Main IoT data flow: MQTT → process → dashboard"
+    },
+    {
+        "id": "mqtt-in-room",
+        "type": "mqtt in",
+        "z": "tab-iot",
+        "name": "Room Sensors",
+        "topic": "room/#",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "mqtt-broker",
+        "x": 120,
+        "y": 100,
+        "wires": [["debug-room"]]
+    },
+    {
+        "id": "mqtt-in-wearable",
+        "type": "mqtt in",
+        "z": "tab-iot",
+        "name": "Wearable Sensors",
+        "topic": "wearable/#",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "mqtt-broker",
+        "x": 120,
+        "y": 180,
+        "wires": [["debug-wearable"]]
+    },
+    {
+        "id": "debug-room",
+        "type": "debug",
+        "z": "tab-iot",
+        "name": "Room Debug",
+        "active": true,
+        "tosidebar": true,
+        "x": 380,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "debug-wearable",
+        "type": "debug",
+        "z": "tab-iot",
+        "name": "Wearable Debug",
+        "active": true,
+        "tosidebar": true,
+        "x": 380,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "mqtt-broker",
+        "type": "mqtt-broker",
+        "name": "Mosquitto",
+        "broker": "mosquitto",
+        "port": "1883",
+        "clientid": "nodered-client",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true
+    }
+]

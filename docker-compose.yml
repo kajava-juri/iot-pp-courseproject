@@ -1,0 +1,68 @@
+services:
+  # ── SvelteKit Frontend ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./server/frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - iot-network
+    depends_on:
+      - backend
+      - mosquitto
+
+  # ── Go Backend ───────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./server/backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "8080:8080"
+    networks:
+      - iot-network
+    depends_on:
+      - mosquitto
+
+  # ── Mosquitto MQTT Broker ────────────────────────────────────────────────────
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    ports:
+      - "1883:1883"   # MQTT
+      - "9001:9001"   # WebSocket
+    volumes:
+      - ./server/mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    networks:
+      - iot-network
+    restart: unless-stopped
+
+  # ── Node-RED ─────────────────────────────────────────────────────────────────
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./server/nodered/data:/data
+    environment:
+      - TZ=Europe/Tallinn
+    networks:
+      - iot-network
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+
+volumes:
+  mosquitto-data:
+  mosquitto-log:
+
+networks:
+  iot-network:
+    driver: bridge
