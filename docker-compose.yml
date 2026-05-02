@@ -4,11 +4,15 @@ services:
     build:
       context: ./server/frontend
       dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
     container_name: frontend
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV}
+    env_file:
+      - .env
     networks:
       - iot-network
     depends_on:

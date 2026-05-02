@@ -33,6 +33,11 @@ Three containers are orchestrated with `docker-compose.yml`:
 
 ### Quick start
 
+Copy env variable and change to your environment
+``` bash
+cp .env.example .env
+```
+
 ```bash
 docker compose up --build
 ```
@@ -63,3 +68,8 @@ pio run --target upload
 - [Docker](https://docs.docker.com/get-docker/) ≥ 24
 - [Docker Compose](https://docs.docker.com/compose/) (included with Docker Desktop)
 - [PlatformIO Core](https://docs.platformio.org/en/latest/core/installation/) for edge nodes
+
+## References
+
+1. Svelte docker setup: https://medium.com/@balazs.csaba.diy/optimized-dockerfile-for-sveltekit-applications-from-experience-and-best-practices-99603d8d1303
+2. Golang Chi guide: https://dev.to/luthfisauqi17/getting-started-with-golang-chi-a-guide-to-building-a-simple-api-210m
