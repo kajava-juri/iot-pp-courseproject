@@ -4,8 +4,7 @@
 #include <Ticker.h>
 #include <DHT.h>
  
-#define WIFI_NAME "name"
-#define WIFI_PASSWORD "password"
+#include "iot_common.h"
  
 #define DHTPIN D3     // Pin where DHT shield is connected. Change this to D4 if the shield has no legs removed.
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
@@ -41,10 +40,14 @@ void setup()
   Serial.begin(115200); // setting up serial connection parameter
   Serial.println("Booting");
  
-  //iot.setConfig("wname", WIFI_NAME);
-  //iot.setConfig("wpass", WIFI_PASSWORD);
+  iot.setConfig("wname", STR(WIFI_NAME));
+  iot.setConfig("wpass", STR(WIFI_PASSWORD));
+  iot.setConfig("msrv", "193.40.245.72");
+  iot.setConfig("mport", "1883");
+  iot.setConfig("muser", "test");
+  iot.setConfig("mpass", "test");
   iot.printConfig(); // print IoT json config to serial
-  iot.setup(); // Initialize IoT library
+  iot.setup();       // Initialize IoT library
  
   // Initialize DHT library
   dht.begin();

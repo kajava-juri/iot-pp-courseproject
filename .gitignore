@@ -63,4 +63,11 @@ profile.cov
 go.work
 go.work.sum
 
+# platformio
+.pioenvs
+.piolibdeps
+.clang_complete
+.gcc-flags.json
+.pio
+
 server/nodered/data
