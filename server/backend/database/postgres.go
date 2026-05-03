@@ -80,14 +80,14 @@ func createDatabaseIfNotExists() error {
 	if createResult.Error != nil {
 		// Check if error is "permission denied" - warn but continue
 		if strings.Contains(createResult.Error.Error(), "permission denied") {
-			fmt.Printf("Warning: Cannot create database %s (permission denied). Please create it manually:\n", db_name)
-			fmt.Printf("  psql -U postgres -c \"CREATE DATABASE %s OWNER %s;\"\n", db_name, utils.GetEnvOrPanic("DB_USER"))
+			log.Printf("Warning: Cannot create database %s (permission denied). Please create it manually:", db_name)
+			log.Printf("  psql -U postgres -c \"CREATE DATABASE %s OWNER %s;\"", db_name, utils.GetEnvOrPanic("DB_USER"))
 			return nil // Don't fail, assume database exists
 		}
 		return fmt.Errorf("failed to create database %s: %w", db_name, createResult.Error)
 	}
 
-	fmt.Printf("Database %s created successfully\n", db_name)
+	log.Printf("Database %s created successfully", db_name)
 	return nil
 }
 
@@ -101,14 +101,14 @@ func InitDb() error {
 
 	d, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Printf("Failed to connect to database: %v\n", err)
+		log.Printf("Failed to connect to database: %v", err)
 		return err
 	}
 	db = d
 
 	err = db.AutoMigrate(&models.Device{}, &models.Patient{}, &models.Room{}, &models.Event{}, &models.Alert{})
 	if err != nil {
-		fmt.Printf("Failed to auto migrate models: %v\n", err)
+		log.Printf("Failed to auto migrate models: %v", err)
 		return err
 	}
 
@@ -129,7 +129,7 @@ func InitDb() error {
 		db.Create(&models.Device{Name: "wearable_device_1", Description: "", RoomID: room1.ID})
 	}
 
-	fmt.Println("Connected to PostgreSQL")
+	log.Println("Connected to PostgreSQL")
 	return nil
 }
 
