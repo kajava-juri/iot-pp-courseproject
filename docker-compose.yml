@@ -31,6 +31,12 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - pg_volume:/var/lib/postgresql:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME} -h localhost || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - iot-network
 
@@ -48,17 +54,13 @@ services:
       DB_NAME: ${DB_NAME}
       DB_POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD}
       DB_USER: postgres
-    healthcheck:
-      test: [ "CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER:-postgres}" -d "$${POSTGRES_DB:-postgres}" -h localhost || exit 1' ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
     networks:
       - iot-network
     depends_on:
-      - postgres
-      - mosquitto
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
 
   # ── Mosquitto MQTT Broker ────────────────────────────────────────────────────
   mosquitto:
@@ -91,10 +93,26 @@ services:
       - mosquitto
     restart: unless-stopped
 
+  pgadmin:
+    image: elestio/pgadmin:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:8080"
+    env_file:
+      - .env
+    volumes:
+      - pgadmin_volume:/var/lib/pgadmin:rw
+    depends_on:
+      - postgres
+    networks:
+      - iot-network
+
 volumes:
   mosquitto-data:
   mosquitto-log:
   pg_volume:
+  pgadmin_volume:
     driver: local
 
 networks:

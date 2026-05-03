@@ -96,7 +96,7 @@ func InitDb() error {
 		return err
 	}
 
-	dsn := fmt.Sprintf("host=%s user=postgres password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Tallinn",
+	dsn := fmt.Sprintf("host=%s user=postgres password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		db_host, db_postgres_password, db_name, db_port)
 
 	d, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -106,7 +106,7 @@ func InitDb() error {
 	}
 	db = d
 
-	err = db.AutoMigrate(&models.Room{}, &models.Patient{}, &models.Event{}, &models.Alert{}, &models.Device{})
+	err = db.AutoMigrate(&models.Device{}, &models.Patient{}, &models.Room{}, &models.Event{}, &models.Alert{})
 	if err != nil {
 		fmt.Printf("Failed to auto migrate models: %v\n", err)
 		return err
@@ -121,11 +121,12 @@ func InitDb() error {
 	if !devExists {
 		// populate initial data
 		// Room
-		db.Create(&models.Room{RoomID: "room_101", RoomName: "Room 101"})
+		room1 := models.Room{RoomID: "room_101", RoomName: "Room 101"}
+		db.Create(&room1)
 		// Patient
-		db.Create(&models.Patient{Name: "John Doe", PatientID: "patient_001", RoomID: "room_101"})
+		db.Create(&models.Patient{Name: "John Doe", PatientID: "patient_001", RoomID: room1.ID})
 		// Device
-		db.Create(&models.Device{Name: "wearable_device_1", Description: "", RoomID: "room_101"})
+		db.Create(&models.Device{Name: "wearable_device_1", Description: "", RoomID: room1.ID})
 	}
 
 	fmt.Println("Connected to PostgreSQL")
