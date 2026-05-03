@@ -131,12 +131,12 @@ void loop() {
     Serial.print(g.gyro.z);
     Serial.println("");
 
-    publishReading("sensor/imu/accel/x", a.acceleration.x);
-    publishReading("sensor/imu/accel/y", a.acceleration.y);
-    publishReading("sensor/imu/accel/z", a.acceleration.z);
-    publishReading("sensor/imu/gyro/x", g.gyro.x);
-    publishReading("sensor/imu/gyro/y", g.gyro.y);
-    publishReading("sensor/imu/gyro/z", g.gyro.z);
+    publishReading("imu/accel/x", a.acceleration.x);
+    publishReading("imu/accel/y", a.acceleration.y);
+    publishReading("imu/accel/z", a.acceleration.z);
+    publishReading("imu/gyro/x", g.gyro.x);
+    publishReading("imu/gyro/y", g.gyro.y);
+    publishReading("imu/gyro/z", g.gyro.z);
   }
 
   delay(10);

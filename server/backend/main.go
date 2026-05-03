@@ -46,14 +46,16 @@ func main() {
 	// publishReading("sensor/imu/gyro/y", g.gyro.y);
 	// publishReading("sensor/imu/gyro/z", g.gyro.z);
 
+	imuTopicPrefix := utils.GetEnv("WEARABLE_IMU_TOPIC_PREFIX", "ESP16")
+
 	subs := []mqttClient.Subscription{
 		{
-			Topic:   "sensor/imu/#",
+			Topic:   imuTopicPrefix + "/imu/#",
 			Qos:     1,
 			Handler: handlers.ImuMessageHandler(),
 		},
 		{
-			Topic:   "enc",
+			Topic:   imuTopicPrefix + "/enc",
 			Qos:     1,
 			Handler: handlers.EncoderMessageHandler(),
 		},
