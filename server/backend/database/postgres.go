@@ -1,0 +1,141 @@
+package postgres
+
+import (
+	"backend/database/models"
+	"backend/pkg/utils"
+	"fmt"
+	"log"
+	"strings"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+/*
+having env variables as global variables might not be the best practice
+had to make a simpleton for loading .env file each call
+*/
+var db_name = utils.GetEnvOrPanic("DB_NAME")
+
+// var db_user = utils.GetEnvOrPanic("DB_USER")
+// var db_user_password = utils.GetEnvOrPanic("DB_USER_PASSWORD")
+var db_postgres_password = utils.GetEnv("DB_POSTGRES_PASSWORD", "")
+var db_host = utils.GetEnvOrPanic("DB_HOST")
+var db_port = utils.GetEnvOrPanic("DB_PORT")
+
+var db *gorm.DB
+
+type Queries struct {
+	db *gorm.DB
+}
+
+func createDatabaseIfNotExists() error {
+	// Connect to default postgres database to create our app database
+	postgresURL := fmt.Sprintf("host=%s user=postgres password=%s dbname=postgres port=%s sslmode=disable",
+		db_host,
+		db_postgres_password,
+		db_port)
+
+	db, err := gorm.Open(postgres.Open(postgresURL), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("failed to connect to postgres database: %w", err)
+	}
+
+	// Check if database exists first
+	var exists bool
+	checkQuery := fmt.Sprintf("SELECT EXISTS(SELECT datname FROM pg_catalog.pg_database WHERE datname = '%s')", db_name)
+	result := db.Raw(checkQuery).Scan(&exists)
+	if result.Error != nil {
+		return fmt.Errorf("failed to check if database exists: %w", result.Error)
+	}
+
+	// If no clean argument was set, return
+	if !utils.CmdArgs.CleanDb && exists {
+		log.Printf("Database %s already exists\n", db_name)
+		return nil
+	}
+
+	// if clean argument was set, drop the database
+	if utils.CmdArgs.CleanDb && exists {
+		log.Printf("Dropping database %s\n", db_name)
+		// Credit to Leeladharan Achar https://stackoverflow.com/questions/664091/drop-a-database-being-accessed-by-another-users/664119
+		stopSessions := fmt.Sprintf(`
+		SELECT pg_terminate_backend(pg_stat_activity.pid)
+		FROM pg_stat_activity
+		WHERE pg_stat_activity.datname = '%s'
+		AND pid <> pg_backend_pid();
+		`, db_name)
+		if err := db.Exec(stopSessions).Error; err != nil {
+			return fmt.Errorf("failed to drop database %s: %w", db_name, err)
+		}
+
+		dropQuery := fmt.Sprintf("DROP DATABASE %s", db_name)
+		if err := db.Exec(dropQuery).Error; err != nil {
+			return fmt.Errorf("failed to drop database %s: %w", db_name, err)
+		}
+	}
+
+	// Create database if it doesn't exist
+	createResult := db.Exec(fmt.Sprintf("CREATE DATABASE %s", db_name))
+	if createResult.Error != nil {
+		// Check if error is "permission denied" - warn but continue
+		if strings.Contains(createResult.Error.Error(), "permission denied") {
+			fmt.Printf("Warning: Cannot create database %s (permission denied). Please create it manually:\n", db_name)
+			fmt.Printf("  psql -U postgres -c \"CREATE DATABASE %s OWNER %s;\"\n", db_name, utils.GetEnvOrPanic("DB_USER"))
+			return nil // Don't fail, assume database exists
+		}
+		return fmt.Errorf("failed to create database %s: %w", db_name, createResult.Error)
+	}
+
+	fmt.Printf("Database %s created successfully\n", db_name)
+	return nil
+}
+
+func InitDb() error {
+	if err := createDatabaseIfNotExists(); err != nil {
+		return err
+	}
+
+	dsn := fmt.Sprintf("host=%s user=postgres password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Tallinn",
+		db_host, db_postgres_password, db_name, db_port)
+
+	d, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		fmt.Printf("Failed to connect to database: %v\n", err)
+		return err
+	}
+	db = d
+
+	err = db.AutoMigrate(&models.Room{}, &models.Patient{}, &models.Event{}, &models.Alert{}, &models.Device{})
+	if err != nil {
+		fmt.Printf("Failed to auto migrate models: %v\n", err)
+		return err
+	}
+
+	// populate data if not exists
+	var devExists bool
+	result := db.Raw("SELECT EXISTS(SELECT id FROM devices LIMIT 1)").Scan(&devExists)
+	if result.Error != nil {
+		return fmt.Errorf("failed to check if database exists: %w", result.Error)
+	}
+	if !devExists {
+		// populate initial data
+		// Room
+		db.Create(&models.Room{RoomID: "room_101", RoomName: "Room 101"})
+		// Patient
+		db.Create(&models.Patient{Name: "John Doe", PatientID: "patient_001", RoomID: "room_101"})
+		// Device
+		db.Create(&models.Device{Name: "wearable_device_1", Description: "", RoomID: "room_101"})
+	}
+
+	fmt.Println("Connected to PostgreSQL")
+	return nil
+}
+
+func New() *Queries {
+	return &Queries{db: db}
+}
+
+func DB() *gorm.DB {
+	return db
+}
