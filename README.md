@@ -57,9 +57,10 @@ See running service, check that everything is OK and not restarting.
 docker ps
 ```
 
-- Svelte UI  → http://localhost:3000
-- Node-RED   → http://localhost:1880
-- MQTT broker → `mqtt://localhost:1883`
+- Svelte UI     -> http://localhost:3000
+- Node-RED      -> http://localhost:1880
+- MQTT broker   -> `mqtt://localhost:1883`
+- Go API        -> http://localhost:8080/
 
 ## Edge Nodes (PlatformIO)
 
