@@ -23,8 +23,6 @@ services:
     image: postgres:18.3-alpine
     container_name: postgres
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_POSTGRES_USER}
       POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD}
