@@ -4,6 +4,10 @@ A full-stack IoT system consisting of three Docker-based server services and thr
 
 ## Project Structure
 
+**A couple note**
+- mosquitto probably will not be used because TalTech has its own MQTT broker
+- nodered is there but most of the logic and message handling will be done using the Golang project
+
 ```
 root/
 ├── edge_nodes/
@@ -27,7 +31,7 @@ Three containers are orchestrated with `docker-compose.yml`:
 
 | Service      | Port(s)        | Description                        |
 |-------------|----------------|------------------------------------|
-| `svelte-ui` | 5173           | Svelte front-end (Vite dev server) |
+| `svelte-ui` | 3000           | Svelte front-end (Vite dev server) |
 | `mosquitto` | 1883 / 9001    | MQTT broker (TCP + WebSocket)      |
 | `nodered`   | 1880           | Node-RED flow editor               |
 
@@ -36,38 +40,47 @@ Three containers are orchestrated with `docker-compose.yml`:
 Copy env variable and change to your environment
 ``` bash
 cp .env.example .env
+cp .env server/backend
 ```
+
+**You might need to use `sudo` for docker commands**
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
-- Svelte UI  → http://localhost:5173
-- Node-RED   → http://localhost:1880
-- MQTT broker → `mqtt://localhost:1883`
+- --build   Build images before starting containers
+- --d       Detached mode, dont start listening to the containers
+
+See running service, check that everything is OK and not restarting.
+``` bash
+docker ps
+```
+
+- Svelte UI     -> http://localhost:3000
+- Node-RED      -> http://localhost:1880
+- MQTT broker   -> `mqtt://localhost:1883`
+- Go API        -> http://localhost:8080/
 
 ## Edge Nodes (PlatformIO)
 
 Each sub-folder under `edge_nodes/` is an independent PlatformIO project.
 
-| Node             | Role                                            |
-|------------------|-------------------------------------------------|
-| `wearable_node`  | Wearable sensor – collects health/activity data |
-| `room_node`      | Room sensor – temperature, humidity, CO₂        |
-| `interface_node` | Gateway – bridges edge data to MQTT broker      |
+| Node             | Role                                                   |
+|------------------|--------------------------------------------------------|
+| `wearable_node`  | Wearable sensor – collects health/activity data        |
+| `room_node`      | Room sensor – temperature, humidity, CO₂               |
+| `interface_node` | Gateway – interface with the user (OLED, relay?)       |
 
 ### Build & flash
 
-```bash
-cd edge_nodes/wearable_node
-pio run --target upload
-```
+Using PlatformIO VSCode extension.
 
 ## Requirements
 
 - [Docker](https://docs.docker.com/get-docker/) ≥ 24
 - [Docker Compose](https://docs.docker.com/compose/) (included with Docker Desktop)
-- [PlatformIO Core](https://docs.platformio.org/en/latest/core/installation/) for edge nodes
+- PlatformIO Core
 
 ## References
 
