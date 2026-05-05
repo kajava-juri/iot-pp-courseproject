@@ -1,27 +1,23 @@
 #include <Arduino.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
-#include <ClickEncoder.h>
 #include <ittiot.h>
 #include <Ticker.h>
 #include <Wire.h>
+#include <DHT.h>
 
 #include "iot_common.h"
 
-// Defining pins as need for the encoder
-#define ENC_PINA 12
-#define ENC_PINB 13
-#define ENC_BTN   0
-#define ENC_STEPS_PER_NOTCH 4
+// Defining pins for DHT sensor
+#define DHTPIN D3
+#define DHTTYPE DHT22
 
 Adafruit_MPU6050 mpu;
-ClickEncoder encoder = ClickEncoder(ENC_PINA, ENC_PINB, ENC_BTN, ENC_STEPS_PER_NOTCH);
+DHT dht(DHTPIN, DHTTYPE);
 
-Ticker encTicker;
+Ticker dhtTicker;
 
-bool encFlag;
-int16_t encoderValue;
-int16_t lastEncoderValue;
+bool sendDHTFlag;
 
 void iot_received(String topic, String msg) {}
 
@@ -36,13 +32,8 @@ void publishReading(const char *topic, float value) {
   iot.publishMsg(topic, buf);
 }
 
-void publishEncoderValue(int16_t value) {
-  String msg = String(value);
-  iot.publishMsg("enc", msg.c_str());
-}
-
-void setEncFlag() {
-  encFlag = true;
+void sendDHT() {
+  sendDHTFlag = true;
 }
 
 void setup(void) {
@@ -61,9 +52,9 @@ void setup(void) {
   iot.printConfig();
   iot.setup();
 
-  encoder.setButtonHeldEnabled(true);
-  encoder.setDoubleClickEnabled(true);
-  encTicker.attach(1, setEncFlag);
+  // Initialize DHT sensor
+  dht.begin();
+  dhtTicker.attach(1, sendDHT);
 
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
@@ -89,23 +80,14 @@ void loop() {
 
   delay(10);
 
-  static uint32_t lastService = 0;
-  if (lastService + 1000 < micros()) {
-    lastService = micros();
-    encoder.service();
-  }
+  if (sendDHTFlag) {
+    sendDHTFlag = false;
+    // Read humidity and temperature
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
 
-  encoderValue += encoder.getValue();
-
-  if (encoderValue != lastEncoderValue) {
-    lastEncoderValue = encoderValue;
-    Serial.print("Encoder Value: ");
-    Serial.println(encoderValue);
-  }
-
-  if (encFlag) {
-    encFlag = false;
-    publishEncoderValue(encoderValue);
+    publishReading("temp", t);
+    publishReading("hum", h);
   }
 
   if (mpu.getMotionInterruptStatus()) {
