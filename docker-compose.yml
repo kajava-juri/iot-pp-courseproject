@@ -3,14 +3,17 @@ services:
   frontend:
     build:
       context: ./server/frontend
-      dockerfile: Dockerfile
+      dockerfile: ${FRONTEND_DOCKERFILE:-Dockerfile.dev}
       args:
         NODE_ENV: ${NODE_ENV}
     container_name: frontend
+    volumes:
+      - ./server/frontend:/app:delegated
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=${NODE_ENV}
+      - CHOKIDAR_USEPOLLING=true
     env_file:
       - .env
     networks:
@@ -45,13 +48,16 @@ services:
       dockerfile: Dockerfile
     container_name: backend
     ports:
-      - "8080:8080"
+      - ${WEB_PORT}:${WEB_PORT}
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${DB_NAME}
       DB_POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD}
-      DB_USER: postgres
+      DB_USER: ${DB_POSTGRES_USER}
+      PORT: ${WEB_PORT}
+    env_file:
+      - .env
     networks:
       - iot-network
     depends_on:
