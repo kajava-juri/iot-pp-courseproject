@@ -102,7 +102,7 @@ services:
     container_name: pgadmin
     restart: unless-stopped
     ports:
-      - "5050:80"
+      - "5050:8080"
     env_file:
       - .env
     volumes:
