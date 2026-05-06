@@ -11,7 +11,7 @@ import (
 type Alert struct {
 	gorm.Model
 	EventID    *uint      `gorm:"index" json:"event_id"`
-	Event      *Event     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"event,omitempty"`
+	Event      *Event     `gorm:"foreignKey:EventID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"event,omitempty"`
 	PatientID  *uint      `gorm:"index" json:"patient_id"`
 	Severity   string     `gorm:"size:50" json:"severity"` // e.g. "low", "medium", "high"
 	Message    string     `gorm:"type:text" json:"message"`

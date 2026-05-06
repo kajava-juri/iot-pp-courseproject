@@ -14,6 +14,15 @@ type AlarmService = AlertService
 
 var Alert = AlertService{}
 
+func (s AlertService) GetAll(alert *models.Alert) ([]models.Alert, error) {
+	var alerts []models.Alert
+	result := postgres.DB().Where(alert).Preload("Event").Find(&alerts)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get alerts: %w", result.Error)
+	}
+	return alerts, nil
+}
+
 func (s AlertService) Create(alert *models.Alert) error {
 	if err := postgres.DB().Create(alert).Error; err != nil {
 		return fmt.Errorf("failed to create alert: %w", err)

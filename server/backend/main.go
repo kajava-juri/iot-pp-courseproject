@@ -2,15 +2,20 @@ package main
 
 import (
 	postgres "backend/database"
+	"backend/database/models"
+	"backend/database/services"
 	handlers "backend/mqtt"
 	mqttClient "backend/pkg/mqtt"
 	"backend/pkg/utils"
 	"backend/pkg/websockets"
+	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 type CommandArguments struct {
@@ -31,7 +36,8 @@ func main() {
 
 	log.Println("Database initialized")
 
-	wsHub := websockets.StartWebsocketServer()
+	wsHub := websockets.NewWsHub()
+	go wsHub.Run()
 
 	mqttConfig := mqttClient.MqttConfig{
 		Broker:   utils.GetEnv("MQTT_BROKER", "mqtt://193.40.245.72:1883"),
@@ -64,17 +70,91 @@ func main() {
 	// 1. Initialize the Chi router
 	r := chi.NewRouter()
 
-	// 2. Add Middleware (optional but recommended)
+	// 2. Add Middleware
+	// Logger was recommended
 	r.Use(middleware.Logger)
+	// Add CORS middleware to allow requests from the frontend
+	// Credit: https://github.com/go-chi/cors
+	r.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+	websockets.RegisterRoutes(r, wsHub)
 
 	// 3. Create a Dummy API (GET Endpoint)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
 	})
 
-	// 4. Run the Server
+	r.Get("/event/{id}", func(w http.ResponseWriter, r *http.Request) {
+		idParam := chi.URLParam(r, "id")
+		eventID, err := strconv.ParseUint(idParam, 10, 64)
+		if err != nil {
+			http.Error(w, "Invalid event ID", http.StatusBadRequest)
+			return
+		}
 
-	http.ListenAndServe(":"+utils.GetEnv("WEB_PORT", "8080"), r)
+		event, err := services.Event.GetByID(uint(eventID))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(event); err != nil {
+			log.Printf("Failed to encode event to JSON: %v", err)
+		}
+	})
+
+	r.Get("/event/all", func(w http.ResponseWriter, r *http.Request) {
+		events, err := services.Event.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(events); err != nil {
+			log.Printf("Failed to encode events to JSON: %v", err)
+		}
+	})
+
+	r.Get("/alert/all/unresolved", func(w http.ResponseWriter, r *http.Request) {
+		alerts, err := services.Alert.GetAll(&models.Alert{Resolved: false})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		unresolvedAlerts := make([]models.Alert, 0)
+		for _, alert := range alerts {
+			if !alert.Resolved {
+				unresolvedAlerts = append(unresolvedAlerts, alert)
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(unresolvedAlerts); err != nil {
+			log.Printf("Failed to encode alerts to JSON: %v", err)
+		}
+	})
+
+	// 4. Run the Server
+	// Start server in goroutine
+	go func() {
+		if err := http.ListenAndServe(":"+utils.GetEnv("WEB_PORT", "8080"), r); err != nil {
+			log.Printf("API server error: %v", err)
+		}
+	}()
 
 	// keep the main function running to allow MQTT client to receive messages
 	select {}

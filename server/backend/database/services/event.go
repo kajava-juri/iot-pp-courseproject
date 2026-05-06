@@ -4,12 +4,22 @@ import (
 	postgres "backend/database"
 	"backend/database/models"
 	"fmt"
+
 	"gorm.io/gorm"
 )
 
 type EventService struct{}
 
 var Event = EventService{}
+
+func (s EventService) GetAll() ([]models.Event, error) {
+	var events []models.Event
+	result := postgres.DB().Preload("Rooms").Preload("Patients").Find(&events)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get events: %w", result.Error)
+	}
+	return events, nil
+}
 
 func (s EventService) Create(event *models.Event) error {
 	if err := postgres.DB().Create(event).Error; err != nil {

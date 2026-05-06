@@ -4,6 +4,7 @@ import (
 	"backend/database/models"
 	"backend/database/services"
 	"backend/pkg/websockets"
+	"fmt"
 	"log"
 	"regexp"
 
@@ -30,17 +31,27 @@ func ImuMessageHandler() mqtt.MessageHandler {
 }
 
 func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
-	event := &models.Event{
-		Type: models.EventTypeFall,
-	}
-	if err := services.Event.Create(event); err != nil {
-		log.Printf("Failed to create fall event: %v", err)
-	}
-
 	return func(client mqtt.Client, msg mqtt.Message) {
 		topic := msg.Topic()
 		payload := string(msg.Payload())
 		log.Printf("Fall event => %s", payload)
+
+		event := &models.Event{Type: models.EventTypeFall}
+		if err := services.Event.Create(event); err != nil {
+			log.Printf("Failed to create fall event: %v", err)
+			wsHub.BroadcastToTopic(msg.Payload(), topic)
+			return
+		}
+
+		alert := &models.Alert{
+			EventID:  &event.ID,
+			Severity: "high",
+			Message:  fmt.Sprintf("Fall detected: %s", payload),
+		}
+		if err := services.Alert.Create(alert); err != nil {
+			log.Printf("Failed to create fall alert: %v", err)
+		}
+
 		wsHub.BroadcastToTopic(msg.Payload(), topic)
 	}
 }
