@@ -19,7 +19,7 @@
         classes={{ nonactive: nonActiveClass, active: activeClass, div: "overflow-y-auto px-3 py-4" }}
         >
         <SidebarGroup>
-            <SidebarItem label="Add Patient" href="#">
+            <SidebarItem label="Add Patient" href="/patient">
                 {#snippet icon()}
                     <CirclePlusOutline class="h-5 w-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white" />
                 {/snippet}
