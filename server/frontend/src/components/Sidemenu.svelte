@@ -16,8 +16,7 @@
         activeUrl={activeUrl}
         alwaysOpen={true}
         class="z-50 h-full relative bg-gray-100 *:bg-gray-100"
-        divClass="overflow-y-auto px-3 py-4"
-        classes={{ nonactive: nonActiveClass, active: activeClass }}
+        classes={{ nonactive: nonActiveClass, active: activeClass, div: "overflow-y-auto px-3 py-4" }}
         >
         <SidebarGroup>
             <SidebarItem label="Add Patient" href="#">
