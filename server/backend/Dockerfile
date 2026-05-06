@@ -16,6 +16,6 @@ WORKDIR /app
 
 COPY --from=build /app/backend .
 
-EXPOSE 8080
+EXPOSE ${WEB_PORT}
 
 CMD ["./backend"]

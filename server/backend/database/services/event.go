@@ -4,7 +4,6 @@ import (
 	postgres "backend/database"
 	"backend/database/models"
 	"fmt"
-
 	"gorm.io/gorm"
 )
 

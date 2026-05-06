@@ -5,6 +5,7 @@ import (
 	handlers "backend/mqtt"
 	mqttClient "backend/pkg/mqtt"
 	"backend/pkg/utils"
+	"backend/pkg/websockets"
 	"log"
 	"net/http"
 
@@ -30,6 +31,8 @@ func main() {
 
 	log.Println("Database initialized")
 
+	wsHub := websockets.StartWebsocketServer()
+
 	mqttConfig := mqttClient.MqttConfig{
 		Broker:   utils.GetEnv("MQTT_BROKER", "mqtt://193.40.245.72:1883"),
 		ClientId: utils.GetEnv("MQTT_CLIENT_ID", "home-security-backend"),
@@ -39,25 +42,14 @@ func main() {
 
 	log.Printf("MQTT Config: %+v", mqttConfig)
 
-	// publishReading("sensor/imu/accel/x", a.acceleration.x);
-	// publishReading("sensor/imu/accel/y", a.acceleration.y);
-	// publishReading("sensor/imu/accel/z", a.acceleration.z);
-	// publishReading("sensor/imu/gyro/x", g.gyro.x);
-	// publishReading("sensor/imu/gyro/y", g.gyro.y);
-	// publishReading("sensor/imu/gyro/z", g.gyro.z);
-
 	imuTopicPrefix := utils.GetEnv("WEARABLE_IMU_TOPIC_PREFIX", "ESP16")
+	fallTopic := utils.GetEnv("FALL_EVENT_TOPIC", "event/fall")
 
 	subs := []mqttClient.Subscription{
 		{
-			Topic:   imuTopicPrefix + "/imu/#",
+			Topic:   imuTopicPrefix + "/" + fallTopic + "/#",
 			Qos:     1,
-			Handler: handlers.ImuMessageHandler(),
-		},
-		{
-			Topic:   imuTopicPrefix + "/enc",
-			Qos:     1,
-			Handler: handlers.EncoderMessageHandler(),
+			Handler: handlers.FallEventMessageHandler(wsHub),
 		},
 	}
 
@@ -81,7 +73,8 @@ func main() {
 	})
 
 	// 4. Run the Server
-	http.ListenAndServe(":8080", r)
+
+	http.ListenAndServe(":"+utils.GetEnv("WEB_PORT", "8080"), r)
 
 	// keep the main function running to allow MQTT client to receive messages
 	select {}
