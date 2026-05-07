@@ -62,6 +62,28 @@ docker ps
 - MQTT broker   -> `mqtt://localhost:1883`
 - Go API        -> http://localhost:8080/
 
+###### PgAdmin
+
+1. First open PgAdmin and log in
+URL: http://localhost:5050
+
+Username/Email: check in .env PGADMIN_DEFAULT_EMAIL 
+Password: check in .env PGADMIN_DEFAULT_PASSWORD
+
+2. Add server
+
+**General**
+- server name: choose whatever (e.g healthcare_server)
+
+**Connection**
+- Host name/address: check .env DB_HOST (default is `postgres`)
+- Port: 5432
+- Username: postgres
+- Password: postgres
+
+**Press Connect**
+
+
 ## Edge Nodes (PlatformIO)
 
 Each sub-folder under `edge_nodes/` is an independent PlatformIO project.
