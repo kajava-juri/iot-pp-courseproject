@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/api/routes"
 	postgres "backend/database"
 	"backend/database/models"
 	"backend/database/services"
@@ -147,6 +148,8 @@ func main() {
 			log.Printf("Failed to encode alerts to JSON: %v", err)
 		}
 	})
+
+	r.Mount("/patient", routes.PatientRoutes())
 
 	// 4. Run the Server
 	// Start server in goroutine
