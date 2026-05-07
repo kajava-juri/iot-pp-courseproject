@@ -39,13 +39,22 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 		log.Printf("Fall event => %s", payload)
 
 		parts := strings.SplitN(strings.TrimPrefix(topic, "/"), "/", 2)
-		topicPrefix := ""
+		deviceIDStr := ""
 		if len(parts) > 0 {
-			topicPrefix = parts[0]
+			deviceIDStr = parts[0]
 		}
-		alertTopic := topicPrefix + "/alert/fall"
+		alertTopic := deviceIDStr + "/alert/fall"
 
-		event := &models.Event{Type: models.EventTypeFall}
+		// Lookup device by Device.DeviceID (registered devices only)
+		device, err := services.Device.GetByDeviceID(deviceIDStr)
+		if err != nil {
+			log.Printf("Unknown device %s: %v", deviceIDStr, err)
+			return
+		}
+
+		// Create event and attach the device's internal ID
+		event := &models.Event{Type: models.EventTypeFall, DeviceID: device.ID}
+
 		if err := services.Event.Create(event); err != nil {
 			log.Printf("Failed to create fall event: %v", err)
 			wsHub.BroadcastToTopic(msg.Payload(), topic)
@@ -73,6 +82,7 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 
 		wsHub.BroadcastToTopic(msg.Payload(), topic)
 		wsHub.BroadcastToTopic(alertJSON, alertTopic)
+		client.Publish(alertTopic, 1, false, alertJSON)
 	}
 }
 

@@ -126,7 +126,8 @@ func InitDb() error {
 		// Patient
 		db.Create(&models.Patient{Name: "John Doe", PatientID: "patient_001", RoomID: room1.ID})
 		// Device
-		db.Create(&models.Device{Name: "wearable_device_1", Description: "", RoomID: room1.ID})
+		db.Create(&models.Device{Name: "wearable_device_1", DeviceID: "ESP16", Description: "IMU and DHT", RoomID: room1.ID})
+		db.Create(&models.Device{Name: "room_device_1", DeviceID: "ESP60", Description: "PIR sensor", RoomID: room1.ID})
 	}
 
 	log.Println("Connected to PostgreSQL")
