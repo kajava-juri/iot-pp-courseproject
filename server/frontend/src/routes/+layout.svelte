@@ -9,8 +9,9 @@
     import Alerts from "$components/Alerts.svelte";
   import { WsSocketStore, WsMessageStore } from '$stores/ws_store.svelte.ts';
   import { fetcher } from '../utils/fetcher.ts';
-    import { tryParseAlert, tryParseAlerts } from "../types/healthcare-db-types";
+    import { tryParseAlert, tryParseAlerts } from "$types/healthcare-db-types";
     import AlertItem from "$components/AlertItem.svelte";
+    import type { AxiosResponse } from "axios";
 
     type ToastAlert = {
         toastId: string;
@@ -26,65 +27,6 @@
         RoomID: string;
         Timestamp: string;
     }>>([]);
-
-/**  onMount(async () => {
-    // Subscribe to WebSocket messages
-    WsMessageStore.subscribe(currentMessage => {
-      if (currentMessage) {
-        console.log('Received WebSocket message:', currentMessage);
-
-        if (currentMessage.topic.endsWith('/alert/fall')) {
-          let alertDataJson = currentMessage.payload;
-          try {
-            let alertData = tryParseAlert(alertDataJson);
-            if (!alertData.success) {
-              console.error('Failed to parse alert data from WebSocket message');
-              return;
-            }
-            console.log('Parsed alert data:', alertData.data);
-            const alertInfo = {
-              PatientName: alertData.data.patient_id ? `Patient ${alertData.data.patient_id}` : 'Unknown',
-              AlertType: alertData.data.event?.type || 'Unknown Event',
-              RoomID: alertData.data.event?.device_id.toString() || 'N/A',
-              Timestamp: new Date(alertData.data.CreatedAt).toLocaleTimeString()
-            };
-            alerts = [alertInfo, ...alerts];
-            alertsStore.update(alerts => [alertData.data, ...alerts]);
-          } catch (error) {
-            console.error('Failed to parse WebSocket message payload:', error);
-          }
-          // const alertData = {
-          //   PatientName: `Patient ${currentMessage.patient_id || 'Unknown'}`,
-          //   AlertType: 'Fall Detected',
-          //   RoomID: 'N/A',
-          //   Timestamp: new Date(currentMessage.timestamp).toLocaleTimeString()
-          // };
-          // alerts = [alertData, ...alerts];
-          // alertsStore.update(alerts => [currentMessage, ...alerts]);
-        }
-      }
-    });
-
-    // Fetch unresolved alerts
-    try {
-      const response = await fetcher('/alert/all/unresolved');
-      console.log('Fetched alerts:', response);
-      const parseResult = tryParseAlerts(response);
-      if (parseResult.success) {
-        alerts = parseResult.data.map(alert => ({
-          PatientName: alert.patient_id ? `Patient ${alert.patient_id}` : 'Unknown',
-          AlertType: alert.event?.type || 'Unknown Event',
-          RoomID: alert.event?.device_id.toString() || 'N/A',
-          Timestamp: new Date(alert.CreatedAt).toLocaleTimeString()
-        }));
-        alertsStore.set(parseResult.data);
-      } else {
-        console.error('Failed to parse alerts:', parseResult.error);
-      }
-    } catch (error) {
-      console.error('Failed to fetch alerts:', error);
-    }
-  });*/
 
   async function wsSetup() {
     WsMessageStore.subscribe(currentMessage => {
@@ -125,7 +67,7 @@
 
     // Fetch unresolved alerts
     try {
-      const response = await fetcher('/alert/all/unresolved');
+      const response = (await fetcher('/alert/all/unresolved')).data;
       console.log('Fetched alerts:', response);
       const parseResult = tryParseAlerts(response);
       if (parseResult.success) {
@@ -201,7 +143,7 @@
     <div class="flex flex-1">
         <Sidemenu />
         {@render children()}
-        <div class="flex flex-col w-md">
+        <div class="flex flex-col w-md bg-gray-50">
             <Alerts>
             {#each alerts as alert}
                 <AlertItem

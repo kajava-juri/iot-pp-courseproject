@@ -9,11 +9,12 @@ const config = {
     alias: {
       '$components': 'src/components',
       '$stores': 'src/stores',
+      '$types': 'src/types',
     }
   },
   vite: {
     ssr: {
-      noExternal: ['flowbite-svelte', 'flowbite-svelte-icons']
+      noExternal: ['flowbite-svelte']
     }
   }
 };

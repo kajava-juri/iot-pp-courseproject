@@ -140,3 +140,68 @@ export function tryParseWSMessage(data: unknown): ParseResult<WSMessage> {
     };
   }
 }
+
+export const RoomSchema = z.object({
+  ID: z.number(),
+  CreatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  UpdatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
+  room_name: z.string()
+})
+export const RoomArraySchema = z.array(RoomSchema);
+
+export type Room = z.infer<typeof RoomSchema>;
+export type RoomArray = z.infer<typeof RoomArraySchema>;
+
+/**    {
+        "ID": 8,
+        "CreatedAt": "2026-05-07T16:24:51.234122Z",
+        "UpdatedAt": "2026-05-07T16:24:51.234122Z",
+        "DeletedAt": null,
+        "room_name": "Room 108"
+    }, */
+
+export function tryParseRoom(data: unknown): ParseResult<Room> {
+  try {
+    return { success: true, data: RoomSchema.parse(data) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+export function tryParseRooms(data: unknown): ParseResult<RoomArray> {
+  try {
+    return { success: true, data: RoomArraySchema.parse(data) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+export const PatientSchema = z.object({
+  ID: z.number(),
+  CreatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  UpdatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
+  name: z.string(),
+  patient_id: z.string(),
+  room: RoomSchema.nullable(),
+});
+
+export type Patient = z.infer<typeof PatientSchema>;
+
+export function tryParsePatient(data: unknown): ParseResult<Patient> {
+  try {
+    return { success: true, data: PatientSchema.parse(data) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
