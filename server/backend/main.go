@@ -150,6 +150,7 @@ func main() {
 	})
 
 	r.Mount("/patient", routes.PatientRoutes())
+	r.Mount("/room", routes.RoomRoutes())
 
 	// 4. Run the Server
 	// Start server in goroutine

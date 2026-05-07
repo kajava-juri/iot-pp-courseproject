@@ -121,8 +121,12 @@ func InitDb() error {
 	if !devExists {
 		// populate initial data
 		// Room
-		room1 := models.Room{RoomID: "room_101", RoomName: "Room 101"}
+		room1 := models.Room{RoomName: "Room 101"}
 		db.Create(&room1)
+		for i := 102; i <= 211; i++ {
+			db.Create(&models.Room{RoomName: fmt.Sprintf("Room %d", i)})
+		}
+
 		// Patient
 		db.Create(&models.Patient{Name: "John Doe", PatientID: "patient_001", RoomID: room1.ID})
 		// Device

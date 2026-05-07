@@ -19,6 +19,14 @@ func (s RoomService) Create(room *models.Room) error {
 	return nil
 }
 
+func (s RoomService) List() ([]models.Room, error) {
+	var rooms []models.Room
+	if err := postgres.DB().Find(&rooms).Error; err != nil {
+		return nil, fmt.Errorf("failed to list rooms: %w", err)
+	}
+	return rooms, nil
+}
+
 func (s RoomService) GetByID(id uint) (*models.Room, error) {
 	var room models.Room
 	result := postgres.DB().First(&room, id)

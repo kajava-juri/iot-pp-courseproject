@@ -19,6 +19,26 @@ func (s PatientService) Create(patient *models.Patient) error {
 	return nil
 }
 
+func (s PatientService) List() ([]models.Patient, error) {
+	var patients []models.Patient
+	if err := postgres.DB().Preload("Room").Find(&patients).Error; err != nil {
+		return nil, fmt.Errorf("failed to list patients: %w", err)
+	}
+	return patients, nil
+}
+
+func (s PatientService) GetByPatientID(patientID string) (*models.Patient, error) {
+	var patient models.Patient
+	result := postgres.DB().Preload("Room").Where("patient_id = ?", patientID).First(&patient)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("patient with patient_id %s not found: %w", patientID, result.Error)
+		}
+		return nil, fmt.Errorf("failed to get patient with patient_id %s: %w", patientID, result.Error)
+	}
+	return &patient, nil
+}
+
 func (s PatientService) GetByID(id uint) (*models.Patient, error) {
 	var patient models.Patient
 	result := postgres.DB().Preload("Room").First(&patient, id)
