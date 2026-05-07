@@ -101,8 +101,8 @@
   let selectedId = $state<number | null>(null);
 </script>
 
-<div class="flex flex-1">
-  <div class="w-72 flex flex-col">
+<div class="flex flex-1 w-full">
+  <div class="w-md flex flex-col flex-1">
     <PatientList title="Patients" count={patients.length}>
       {#each patients as p (p.id)}
         <PatientItem
@@ -119,7 +119,7 @@
     </PatientList>
   </div>
 
-  <div class="flex-1 flex flex-col">
+  <div class="flex flex-col">
     <Alerts>
       {#each alerts as alert}
         <AlertItem

@@ -14,7 +14,7 @@
     }: Props = $props();
 </script>
 
-<div class="p-6 justify-center text-center flex flex-col bg-primary-700 rounded-2xl text-white font-semibold">
+<div class="p-6 justify-center text-center flex flex-col bg-primary-700 rounded-2xl text-white font-semibold w-xs">
     <div>
         <span class="text-sm">{PatientName}</span>
         , <span class="text-sm">ROOM {RoomID}</span>

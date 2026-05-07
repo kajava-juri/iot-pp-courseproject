@@ -3,12 +3,15 @@ services:
   frontend:
     build:
       context: ./server/frontend
-      dockerfile: ${FRONTEND_DOCKERFILE:-Dockerfile.dev}
+      dockerfile: ${FRONTEND_DOCKERFILE:-Dockerfile}
       args:
         NODE_ENV: ${NODE_ENV}
+        VITE_WEB_PORT: ${VITE_WEB_PORT}
+        VITE_SERVER_URL: ${VITE_SERVER_URL}
+        VITE_FALL_EVENT_TOPIC: ${VITE_FALL_EVENT_TOPIC}
+        VITE_ALERT_TOPIC: ${VITE_ALERT_TOPIC}
+        VITE_WEARABLE_IMU_TOPIC_PREFIX: ${VITE_WEARABLE_IMU_TOPIC_PREFIX}
     container_name: frontend
-    volumes:
-      - ./server/frontend:/app:delegated
     ports:
       - "3000:3000"
     environment:
@@ -18,8 +21,6 @@ services:
       - .env
     networks:
       - iot-network
-    depends_on:
-      - backend
 
   postgres:
     image: postgres:18.3-alpine
@@ -62,23 +63,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      mosquitto:
-        condition: service_started
-
-  # ── Mosquitto MQTT Broker ────────────────────────────────────────────────────
-  mosquitto:
-    image: eclipse-mosquitto:2.0
-    container_name: mosquitto
-    ports:
-      - "1883:1883"   # MQTT
-      - "9001:9001"   # WebSocket
-    volumes:
-      - ./server/mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - mosquitto-data:/mosquitto/data
-      - mosquitto-log:/mosquitto/log
-    networks:
-      - iot-network
-    restart: unless-stopped
 
   # ── Node-RED ─────────────────────────────────────────────────────────────────
   nodered:
@@ -92,8 +76,6 @@ services:
       - TZ=Europe/Tallinn
     networks:
       - iot-network
-    depends_on:
-      - mosquitto
     restart: unless-stopped
 
   pgadmin:
@@ -112,8 +94,6 @@ services:
       - iot-network
 
 volumes:
-  mosquitto-data:
-  mosquitto-log:
   pg_volume:
   pgadmin_volume:
     driver: local

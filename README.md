@@ -49,6 +49,11 @@ cp .env server/backend
 docker compose up --build -d
 ```
 
+for development and hot refresh:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build frontend
+```
+
 - --build   Build images before starting containers
 - --d       Detached mode, dont start listening to the containers
 

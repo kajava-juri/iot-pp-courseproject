@@ -1,14 +1,11 @@
 import { writable } from 'svelte/store';
-import { browser } from '$app/environment';
 import { tryParseWSMessage, type WSMessage } from '../types/healthcare-db-types';
 
 const WsMessageStore = writable<WSMessage | null>(null);
 const WsSocketStore = writable<WebSocket | null>(null);
 
-let hostname = $state('localhost');
-if (browser) {
-  hostname = window.location.hostname;
-}
+let hostname = import.meta.env.VITE_SERVER_URL;
+console.log(import.meta.env);
 
 const topicPrefix = import.meta.env.VITE_WEARABLE_IMU_TOPIC_PREFIX;
 
