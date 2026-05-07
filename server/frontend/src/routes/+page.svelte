@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { WsSocketStore, WsMessageStore } from '../stores/ws_store.svelte.ts';
+  import { WsSocketStore, WsMessageStore } from '$stores/ws_store.svelte.ts';
   import { fetcher } from '../utils/fetcher.ts';
   import { tryParseAlert, tryParseAlerts } from '../types/healthcare-db-types';
   import PatientList from '$components/PatientList.svelte';

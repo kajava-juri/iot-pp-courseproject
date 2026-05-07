@@ -8,6 +8,12 @@ const config = {
     adapter: adapter(),
     alias: {
       '$components': 'src/components',
+      '$stores': 'src/stores',
+    }
+  },
+  vite: {
+    ssr: {
+      noExternal: ['flowbite-svelte']
     }
   }
 };
