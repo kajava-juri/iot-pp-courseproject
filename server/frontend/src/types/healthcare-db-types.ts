@@ -110,3 +110,33 @@ export function tryParseEvents(data: unknown): ParseResult<EventArray> {
     };
   }
 }
+
+export const wsMessageSchema = z.preprocess(
+  (input) => {
+    if (typeof input === 'string') {
+      try {
+        return JSON.parse(input);
+      } catch {
+        return input;
+      }
+    }
+    return input;
+  },
+  z.object({
+    topic: z.string(),
+    payload: z.unknown()
+  })
+)
+
+export type WSMessage = z.infer<typeof wsMessageSchema>;
+
+export function tryParseWSMessage(data: unknown): ParseResult<WSMessage> {
+  try {
+    return { success: true, data: wsMessageSchema.parse(data) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}

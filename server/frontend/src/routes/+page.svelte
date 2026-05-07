@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { wsStore } from '../stores/ws_store.svelte.ts';
+  import { WsSocketStore, WsMessageStore } from '../stores/ws_store.svelte.ts';
   import { fetcher } from '../utils/fetcher.ts';
-  import { tryParseAlerts } from '../types/healthcare-db-types';
+  import { tryParseAlert, tryParseAlerts } from '../types/healthcare-db-types';
   import PatientList from '$components/PatientList.svelte';
   import PatientItem from '$components/PatientItem.svelte';
   import Alerts from '$components/Alerts.svelte';
@@ -21,9 +21,39 @@
 
   onMount(async () => {
     // Subscribe to WebSocket messages
-    wsStore.subscribe(currentMessage => {
+    WsMessageStore.subscribe(currentMessage => {
       if (currentMessage) {
         console.log('Received WebSocket message:', currentMessage);
+
+        if (currentMessage.topic.endsWith('/alert/fall')) {
+          let alertDataJson = currentMessage.payload;
+          try {
+            let alertData = tryParseAlert(alertDataJson);
+            if (!alertData.success) {
+              console.error('Failed to parse alert data from WebSocket message');
+              return;
+            }
+            console.log('Parsed alert data:', alertData.data);
+            const alertInfo = {
+              PatientName: alertData.data.patient_id ? `Patient ${alertData.data.patient_id}` : 'Unknown',
+              AlertType: alertData.data.event?.type || 'Unknown Event',
+              RoomID: alertData.data.event?.device_id.toString() || 'N/A',
+              Timestamp: new Date(alertData.data.CreatedAt).toLocaleTimeString()
+            };
+            alerts = [alertInfo, ...alerts];
+            alertsStore.update(alerts => [alertData.data, ...alerts]);
+          } catch (error) {
+            console.error('Failed to parse WebSocket message payload:', error);
+          }
+          // const alertData = {
+          //   PatientName: `Patient ${currentMessage.patient_id || 'Unknown'}`,
+          //   AlertType: 'Fall Detected',
+          //   RoomID: 'N/A',
+          //   Timestamp: new Date(currentMessage.timestamp).toLocaleTimeString()
+          // };
+          // alerts = [alertData, ...alerts];
+          // alertsStore.update(alerts => [currentMessage, ...alerts]);
+        }
       }
     });
 
