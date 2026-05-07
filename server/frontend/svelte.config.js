@@ -13,7 +13,7 @@ const config = {
   },
   vite: {
     ssr: {
-      noExternal: ['flowbite-svelte']
+      noExternal: ['flowbite-svelte', 'flowbite-svelte-icons']
     }
   }
 };

@@ -9,12 +9,14 @@ FROM ${NODE_IMAGE} AS builder
 # Build-time environment variables (from docker-compose args)
 ARG VITE_WEB_PORT=8080
 ARG VITE_SERVER_URL=http://localhost
+ARG VITE_SERVER_HOSTNAME=localhost
 ARG VITE_FALL_EVENT_TOPIC=event/fall
 ARG VITE_ALERT_TOPIC=alert/fall
 ARG VITE_WEARABLE_IMU_TOPIC_PREFIX=ESP16
 
 ENV VITE_WEB_PORT=${VITE_WEB_PORT}
 ENV VITE_SERVER_URL=${VITE_SERVER_URL}
+ENV VITE_SERVER_HOSTNAME=${VITE_SERVER_HOSTNAME}
 ENV VITE_FALL_EVENT_TOPIC=${VITE_FALL_EVENT_TOPIC}
 ENV VITE_ALERT_TOPIC=${VITE_ALERT_TOPIC}
 ENV VITE_WEARABLE_IMU_TOPIC_PREFIX=${VITE_WEARABLE_IMU_TOPIC_PREFIX}
@@ -22,7 +24,7 @@ ENV VITE_WEARABLE_IMU_TOPIC_PREFIX=${VITE_WEARABLE_IMU_TOPIC_PREFIX}
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm i
 
 COPY . .
 RUN npm run build
@@ -39,7 +41,7 @@ WORKDIR /app
 COPY --chown=node:node package.json package-lock.json .
 
 # Install production dependencies only
-RUN npm ci --omit=dev && \
+RUN npm i --omit=dev && \
     # Clean up npm cache to reduce image size
     npm cache clean --force && \
     # Remove unnecessary files and folders from node_modules such as docs, tests, maps, git metadata

@@ -4,8 +4,7 @@ import { tryParseWSMessage, type WSMessage } from '../types/healthcare-db-types'
 const WsMessageStore = writable<WSMessage | null>(null);
 const WsSocketStore = writable<WebSocket | null>(null);
 
-let hostname = import.meta.env.VITE_SERVER_URL;
-console.log(import.meta.env);
+let hostname = import.meta.env.VITE_SERVER_HOSTNAME || 'localhost';
 
 const topicPrefix = import.meta.env.VITE_WEARABLE_IMU_TOPIC_PREFIX;
 
