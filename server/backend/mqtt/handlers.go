@@ -4,9 +4,11 @@ import (
 	"backend/database/models"
 	"backend/database/services"
 	"backend/pkg/websockets"
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -36,6 +38,13 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 		payload := string(msg.Payload())
 		log.Printf("Fall event => %s", payload)
 
+		parts := strings.SplitN(strings.TrimPrefix(topic, "/"), "/", 2)
+		topicPrefix := ""
+		if len(parts) > 0 {
+			topicPrefix = parts[0]
+		}
+		alertTopic := topicPrefix + "/alert/fall"
+
 		event := &models.Event{Type: models.EventTypeFall}
 		if err := services.Event.Create(event); err != nil {
 			log.Printf("Failed to create fall event: %v", err)
@@ -50,9 +59,20 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 		}
 		if err := services.Alert.Create(alert); err != nil {
 			log.Printf("Failed to create fall alert: %v", err)
+			wsHub.BroadcastToTopic(msg.Payload(), topic)
+			return
+		}
+
+		alert.Event = event
+		alertJSON, err := json.Marshal(alert)
+		if err != nil {
+			log.Printf("Failed to marshal fall alert: %v", err)
+			wsHub.BroadcastToTopic(msg.Payload(), topic)
+			return
 		}
 
 		wsHub.BroadcastToTopic(msg.Payload(), topic)
+		wsHub.BroadcastToTopic(alertJSON, alertTopic)
 	}
 }
 

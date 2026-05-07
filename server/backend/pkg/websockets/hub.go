@@ -34,8 +34,28 @@ func (h *WsHub) BroadcastMessage(message []byte) {
 
 func (h *WsHub) BroadcastToTopic(message []byte, topic string) {
 	if clients, ok := h.topicSubscriptions[topic]; ok {
+		// Wrap payload with topic metadata. If payload is JSON, keep it as JSON
+		// so clients don't need to double-parse escaped strings.
+		var payload any
+		if err := json.Unmarshal(message, &payload); err != nil {
+			payload = string(message)
+		}
+
+		out := map[string]any{
+			"topic":   topic,
+			"payload": payload,
+		}
+		b, err := json.Marshal(out)
+		if err != nil {
+			// fallback to raw message if marshal fails
+			for client := range clients {
+				client.SendMessage(message)
+			}
+			return
+		}
+
 		for client := range clients {
-			client.SendMessage(message)
+			client.SendMessage(b)
 		}
 	}
 }
