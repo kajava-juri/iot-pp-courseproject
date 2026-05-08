@@ -147,7 +147,9 @@
 
     <div class="flex flex-1 min-h-0">
         <Sidemenu />
-        {@render children()}
+        <div class="flex flex-1 w-full">
+          {@render children()}
+        </div>
         <div class="flex flex-col w-md bg-gray-50 overflow-y-scroll min-h-0">
             <Alerts>
           {#if alertsLoaded.length === 0}

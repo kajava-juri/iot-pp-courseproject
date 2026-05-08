@@ -38,22 +38,21 @@
   });
 </script>
 
-<div class="flex flex-1 w-full">
-  <div class="w-md flex flex-col flex-1">
-    <PatientList title="Patients" count={patients.length}>
-      {#each patients as p (p.ID)}
-        <PatientItem
-          name={p.name}
-          patientId={p.patient_id}
-          roomName={p.room?.room_name || 'Unassigned'}
-          // severity={p.severity}
-          // lastEvent={p.lastEvent}
-          // lastEventTime={p.lastEventTime}
-          selected={selectedId === p.ID}
-          onclick={() => selectedId = p.ID}
-        />
-      {/each}
-    </PatientList>
-  </div>
+<div class="w-md flex flex-col flex-1">
+  <PatientList title="Patients" count={patients.length}>
+    {#each patients as p (p.ID)}
+      <PatientItem
+        name={p.name}
+        patientId={p.patient_id}
+        roomName={p.room?.room_name || 'Unassigned'}
+        // severity={p.severity}
+        // lastEvent={p.lastEvent}
+        // lastEventTime={p.lastEventTime}
+        selected={selectedId === p.ID}
+        onclick={() => selectedId = p.ID}
+      />
+    {/each}
+  </PatientList>
 </div>
+
 
