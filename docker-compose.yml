@@ -3,7 +3,7 @@ services:
   frontend:
     build:
       context: ./server/frontend
-      dockerfile: ${FRONTEND_DOCKERFILE:-Dockerfile}
+      dockerfile: Dockerfile
       args:
         NODE_ENV: ${NODE_ENV}
         VITE_WEB_PORT: ${VITE_WEB_PORT}
