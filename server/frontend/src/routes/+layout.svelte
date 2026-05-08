@@ -96,7 +96,6 @@
         const unsubscribe = alertsStore.subscribe((alerts) => {
           console.log('Alerts store updated:', alerts);
             const currentIds = new Set(alerts.map((alert) => alert.ID));
-            // Source of truth for right panel is the global alerts store.
             // Keep unresolved first for better operator visibility.
             const sorted = [...alerts].sort((a, b) => {
                 if (a.resolved !== b.resolved) return a.resolved ? 1 : -1;
@@ -146,10 +145,10 @@
 <div class="h-screen flex flex-col bg-white text-gray-900">
     <Header />
 
-    <div class="flex flex-1">
+    <div class="flex flex-1 min-h-0">
         <Sidemenu />
         {@render children()}
-        <div class="flex flex-col w-md bg-gray-50">
+        <div class="flex flex-col w-md bg-gray-50 overflow-y-scroll min-h-0">
             <Alerts>
           {#if alertsLoaded.length === 0}
                 <div class="text-gray-500 text-sm">No active alerts</div>
