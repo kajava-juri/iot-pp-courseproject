@@ -29,11 +29,12 @@ root/
 
 Three containers are orchestrated with `docker-compose.yml`:
 
-| Service      | Port(s)        | Description                        |
+| Service      | Port(s)        | Description                       |
 |-------------|----------------|------------------------------------|
 | `svelte-ui` | 3000           | Svelte front-end (Vite dev server) |
 | `mosquitto` | 1883 / 9001    | MQTT broker (TCP + WebSocket)      |
 | `nodered`   | 1880           | Node-RED flow editor               |
+| `Go API`    | 8081           | Serves HTTP API, Websockets and handles edge nodes MQTT messages |
 
 ### Quick start
 
@@ -70,9 +71,12 @@ docker ps
 ###### PgAdmin
 
 1. First open PgAdmin and log in
+
+
 URL: http://localhost:5050
 
 Username/Email: check in .env PGADMIN_DEFAULT_EMAIL 
+
 Password: check in .env PGADMIN_DEFAULT_PASSWORD
 
 2. Add server
