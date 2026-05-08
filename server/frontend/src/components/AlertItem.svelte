@@ -27,7 +27,7 @@
         alert.patient_id ? `Patient ${alert.patient?.name}` : "Unknown",
     );
     let roomLabel = $derived(
-        alert.patient?.room?.room_name ? alert.patient.room.room_name.toString() : "N/A",
+        alert.event?.room?.room_name ? alert.event.room.room_name.toString() : "N/A",
     );
     let alertType = $derived(alert.event?.type || "Unknown Event");
     let alertTypeText = $derived.by(() => {

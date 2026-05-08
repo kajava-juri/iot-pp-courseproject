@@ -52,22 +52,14 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 			return
 		}
 
-		patients := make([]models.Patient, 0, 1)
-		if device.Patient != nil {
-			patients = append(patients, *device.Patient)
-		}
-
-		rooms := make([]models.Room, 0, 1)
-		if device.Room != nil {
-			rooms = append(rooms, *device.Room)
-		}
-
 		// Create event and attach available device relations.
 		event := &models.Event{
-			Type:     models.EventTypeFall,
-			DeviceID: device.ID,
-			Patients: patients,
-			Rooms:    rooms,
+			Type:      models.EventTypeFall,
+			DeviceID:  device.ID,
+			PatientID: device.PatientID,
+			Patient:   device.Patient,
+			RoomID:    device.RoomID,
+			Room:      device.Room,
 		}
 
 		if err := services.Event.Create(event); err != nil {
@@ -79,6 +71,7 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 		alert := &models.Alert{
 			EventID:   &event.ID,
 			PatientID: device.PatientID,
+			Patient:   device.Patient,
 			Severity:  "high",
 			Message:   fmt.Sprintf("Fall detected: %s", payload),
 		}

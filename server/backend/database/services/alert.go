@@ -16,7 +16,7 @@ var Alert = AlertService{}
 
 func (s AlertService) GetAll(alert *models.Alert) ([]models.Alert, error) {
 	var alerts []models.Alert
-	result := postgres.DB().Where(alert).Preload("Patient").Preload("Patient.Room").Preload("Event").Find(&alerts)
+	result := postgres.DB().Where(alert).Preload("Patient").Preload("Event").Preload("Event.Room").Find(&alerts)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to get alerts: %w", result.Error)
 	}

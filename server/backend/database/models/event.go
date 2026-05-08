@@ -15,12 +15,14 @@ const (
 )
 
 // Event represents a raw device or system event.
-// A single event can be linked to multiple rooms and patients through join tables.
+// For the demo we keep a single optional room and patient relation.
 type Event struct {
 	gorm.Model
-	DeviceID uint      `gorm:"index" json:"device_id" db:"device_id"`
-	Device   Device    `gorm:"foreignKey:DeviceID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"device"`
-	Type     EventType `gorm:"type:text;index;not null" json:"type"`
-	Rooms    []Room    `gorm:"many2many:event_rooms;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"rooms,omitempty"`
-	Patients []Patient `gorm:"many2many:event_patients;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"patients,omitempty"`
+	DeviceID  uint      `gorm:"index" json:"device_id" db:"device_id"`
+	Device    Device    `gorm:"foreignKey:DeviceID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"device"`
+	Type      EventType `gorm:"type:text;index;not null" json:"type"`
+	RoomID    *uint     `gorm:"index" json:"room_id,omitempty" db:"room_id"`
+	Room      *Room     `gorm:"foreignKey:RoomID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"room,omitempty"`
+	PatientID *uint     `gorm:"index" json:"patient_id,omitempty" db:"patient_id"`
+	Patient   *Patient  `gorm:"foreignKey:PatientID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"patient,omitempty"`
 }

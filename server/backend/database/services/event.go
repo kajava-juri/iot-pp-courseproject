@@ -14,7 +14,7 @@ var Event = EventService{}
 
 func (s EventService) GetAll() ([]models.Event, error) {
 	var events []models.Event
-	result := postgres.DB().Preload("Rooms").Preload("Patients").Find(&events)
+	result := postgres.DB().Preload("Device").Preload("Room").Preload("Patient").Find(&events)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to get events: %w", result.Error)
 	}
@@ -30,7 +30,7 @@ func (s EventService) Create(event *models.Event) error {
 
 func (s EventService) GetByID(id uint) (*models.Event, error) {
 	var event models.Event
-	result := postgres.DB().Preload("Rooms").Preload("Patients").First(&event, id)
+	result := postgres.DB().Preload("Device").Preload("Room").Preload("Patient").First(&event, id)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("event %d not found: %w", id, result.Error)
@@ -65,7 +65,7 @@ func (s EventService) List(page int, pageSize int) ([]models.Event, error) {
 	offset := (page - 1) * pageSize
 
 	var events []models.Event
-	result := postgres.DB().Offset(offset).Limit(pageSize).Preload("Rooms").Preload("Patients").Find(&events)
+	result := postgres.DB().Offset(offset).Limit(pageSize).Preload("Device").Preload("Room").Preload("Patient").Find(&events)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to get events: %w", result.Error)
 	}

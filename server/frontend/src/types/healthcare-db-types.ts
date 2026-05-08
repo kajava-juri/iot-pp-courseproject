@@ -82,7 +82,8 @@ export const EventSchema = z.object({
   UpdatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
   DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
   device_id: z.number(),
-  type: EventTypeEnum
+  type: EventTypeEnum,
+  room: RoomSchema.nullable().optional(),
 });
 
 export type Event = z.infer<typeof EventSchema>;
