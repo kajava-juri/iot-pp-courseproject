@@ -6,7 +6,7 @@
   import Alerts from '$components/Alerts.svelte';
   import AlertItem from '$components/AlertItem.svelte';
   import { onMount } from 'svelte';
-  import { alertsStore } from '$stores/alerts.ts';
+  import { alertsStore } from '$stores/alerts';
   import { Alert } from "flowbite-svelte";
   import { InfoCircleSolid } from "flowbite-svelte-icons";
     import { fetcher } from '../utils/fetcher';
@@ -43,7 +43,7 @@
     {#each patients as p (p.ID)}
       <PatientItem
         name={p.name}
-        patientId={p.patient_id}
+        healthId={p.health_id}
         roomName={p.room?.room_name || 'Unassigned'}
         // severity={p.severity}
         // lastEvent={p.lastEvent}

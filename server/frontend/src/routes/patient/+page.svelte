@@ -8,14 +8,14 @@
 
     const patientFormSchema = z.object({
         name: z.string().trim().min(1, "Patient name is required"),
-        patientID: z.string().trim().min(1, "PatientID is required"),
+        healthID: z.string().trim().min(1, "HealthID is required"),
         roomId: z.string().trim().optional(),
     });
 
     let rooms = $state<RoomArray>([]);
     let selectedRoomId = $state<string>("");
     let patientName = $state<string>("");
-    let patientID = $state<string>("");
+    let healthID = $state<string>("");
     let formError = $state<string>("");
     let formErrorMap = $state<Record<string, string>>({});
 
@@ -43,7 +43,7 @@
     async function handleSubmit() {
         const result = patientFormSchema.safeParse({
             name: patientName,
-            patientID,
+            healthID,
             roomId: selectedRoomId,
         });
 
@@ -65,7 +65,7 @@
         try {
             const patientResult = await fetcher("/patient", "post", {
                 name: patientName,
-                patient_id: patientID,
+                health_id: healthID,
                 room_id: selectedRoomId ? parseInt(selectedRoomId) : undefined,
             });
         } catch (error: any) {
@@ -97,11 +97,11 @@
         {/if}
     </div>
     <div class="mb-6">
-        <Label for="patient-id">PatientID</Label>
-        <Input id="patient-id" placeholder="PatientID" bind:value={patientID} />
-        {#if formErrorMap["patientID"]}
+        <Label for="health-id">HealthID</Label>
+        <Input id="health-id" placeholder="HealthID" bind:value={healthID} />
+        {#if formErrorMap["healthID"]}
             <Helper class="mt-2" color="red">
-                <span class="font-medium">{formErrorMap["patientID"]}</span>
+                <span class="font-medium">{formErrorMap["healthID"]}</span>
             </Helper>
         {/if}
     </div>

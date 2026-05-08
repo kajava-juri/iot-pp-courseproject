@@ -24,10 +24,10 @@
 
     let status = $derived(statusOf(alert));
     let patientLabel = $derived(
-        alert.patient_id ? `Patient ${alert.patient_id}` : "Unknown",
+        alert.patient_id ? `Patient ${alert.patient?.name}` : "Unknown",
     );
     let roomLabel = $derived(
-        alert.event?.device_id ? alert.event.device_id.toString() : "N/A",
+        alert.patient?.room?.room_name ? alert.patient.room.room_name.toString() : "N/A",
     );
     let alertType = $derived(alert.event?.type || "Unknown Event");
     let alertTypeText = $derived.by(() => {

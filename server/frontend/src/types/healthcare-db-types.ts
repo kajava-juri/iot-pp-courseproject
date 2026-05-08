@@ -1,5 +1,71 @@
 import { z } from 'zod';
 
+
+export const RoomSchema = z.object({
+  ID: z.number(),
+  CreatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  UpdatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
+  room_name: z.string()
+})
+export const RoomArraySchema = z.array(RoomSchema);
+
+export type Room = z.infer<typeof RoomSchema>;
+export type RoomArray = z.infer<typeof RoomArraySchema>;
+
+/**    {
+        "ID": 8,
+        "CreatedAt": "2026-05-07T16:24:51.234122Z",
+        "UpdatedAt": "2026-05-07T16:24:51.234122Z",
+        "DeletedAt": null,
+        "room_name": "Room 108"
+    }, */
+
+export function tryParseRoom(data: unknown): ParseResult<Room> {
+  try {
+    return { success: true, data: RoomSchema.parse(data) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+export function tryParseRooms(data: unknown): ParseResult<RoomArray> {
+  try {
+    return { success: true, data: RoomArraySchema.parse(data) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+export const PatientSchema = z.object({
+  ID: z.number(),
+  CreatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  UpdatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
+  name: z.string(),
+  health_id: z.string(),
+  room: RoomSchema.nullable(),
+});
+
+export type Patient = z.infer<typeof PatientSchema>;
+
+export function tryParsePatient(data: unknown): ParseResult<Patient> {
+  try {
+    return { success: true, data: PatientSchema.parse(data) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 // Event types and validation
 export const EventTypeEnum = z.enum([
   'fall',
@@ -30,6 +96,7 @@ export const AlertSchema = z.object({
   event_id: z.number().nullable(),
   event: EventSchema.nullable(),
   patient_id: z.number().nullable(),
+  patient: PatientSchema.nullable(),
   severity: z.string(),
   message: z.string(),
   acknowledged: z.boolean().default(false),
@@ -135,71 +202,6 @@ export type WSMessage = z.infer<typeof wsMessageSchema>;
 export function tryParseWSMessage(data: unknown): ParseResult<WSMessage> {
   try {
     return { success: true, data: wsMessageSchema.parse(data) };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
-
-export const RoomSchema = z.object({
-  ID: z.number(),
-  CreatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
-  UpdatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
-  DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
-  room_name: z.string()
-})
-export const RoomArraySchema = z.array(RoomSchema);
-
-export type Room = z.infer<typeof RoomSchema>;
-export type RoomArray = z.infer<typeof RoomArraySchema>;
-
-/**    {
-        "ID": 8,
-        "CreatedAt": "2026-05-07T16:24:51.234122Z",
-        "UpdatedAt": "2026-05-07T16:24:51.234122Z",
-        "DeletedAt": null,
-        "room_name": "Room 108"
-    }, */
-
-export function tryParseRoom(data: unknown): ParseResult<Room> {
-  try {
-    return { success: true, data: RoomSchema.parse(data) };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
-
-export function tryParseRooms(data: unknown): ParseResult<RoomArray> {
-  try {
-    return { success: true, data: RoomArraySchema.parse(data) };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
-
-export const PatientSchema = z.object({
-  ID: z.number(),
-  CreatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
-  UpdatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
-  DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
-  name: z.string(),
-  patient_id: z.string(),
-  room: RoomSchema.nullable(),
-});
-
-export type Patient = z.infer<typeof PatientSchema>;
-
-export function tryParsePatient(data: unknown): ParseResult<Patient> {
-  try {
-    return { success: true, data: PatientSchema.parse(data) };
   } catch (error) {
     return {
       success: false,

@@ -10,6 +10,7 @@ const config = {
       '$components': 'src/components',
       '$stores': 'src/stores',
       '$types': 'src/types',
+      '$utils': 'src/utils'
     }
   },
   vite: {

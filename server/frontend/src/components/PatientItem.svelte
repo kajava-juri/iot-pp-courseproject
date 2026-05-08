@@ -3,7 +3,7 @@
 
   interface Props {
     name: string;
-    patientId: string;
+    healthId: string;
     roomName: string;
     severity?: Severity;
     lastEvent?: string;
@@ -14,7 +14,7 @@
 
   let {
     name,
-    patientId,
+    healthId,
     roomName,
     severity = 'none',
     lastEvent,
@@ -45,7 +45,7 @@
     <div class="flex-1 min-w-0">
       <p class="text-sm font-medium text-gray-900 truncate">{name}</p>
       <p class="text-xs text-gray-500 truncate">
-        ID: {patientId}
+        ID: {healthId}
         {#if lastEvent}
           · <span class="text-gray-400">{lastEvent}</span>
         {/if}
