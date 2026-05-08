@@ -32,6 +32,8 @@ export const AlertSchema = z.object({
   patient_id: z.number().nullable(),
   severity: z.string(),
   message: z.string(),
+  acknowledged: z.boolean().default(false),
+  declined: z.boolean().default(false),
   resolved: z.boolean(),
   resolved_at: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable()
 });

@@ -7,11 +7,10 @@
     import Sidemenu from "$components/Sidemenu.svelte";
     import { alertsStore } from '$stores/alerts';
     import Alerts from "$components/Alerts.svelte";
-  import { WsSocketStore, WsMessageStore } from '$stores/ws_store.svelte.ts';
-  import { fetcher } from '../utils/fetcher.ts';
-    import { tryParseAlert, tryParseAlerts } from "$types/healthcare-db-types";
+    import { WsMessageStore } from '$stores/ws_store';
+    import { fetcher } from '../utils/fetcher';
+    import { tryParseAlert, tryParseAlerts, type Alert as DbAlert } from "$types/healthcare-db-types";
     import AlertItem from "$components/AlertItem.svelte";
-    import type { AxiosResponse } from "axios";
 
     type ToastAlert = {
         toastId: string;
@@ -21,12 +20,24 @@
     let { children } = $props();
     let newAlerts = $state<ToastAlert[]>([]);
 
-    let alerts = $state<Array<{
-        PatientName: string;
-        AlertType: string;
-        RoomID: string;
-        Timestamp: string;
-    }>>([]);
+    let alertsLoaded = $state<DbAlert[]>([]);
+
+    function isDeclined(a: DbAlert): boolean {
+      return (a as DbAlert & { declined?: boolean }).declined === true;
+    }
+
+    let unacknowledgedAlerts = $derived(
+      alertsLoaded.filter((alert) => !alert.resolved && !alert.acknowledged && !isDeclined(alert))
+    );
+    let acknowledgedAlerts = $derived(
+      alertsLoaded.filter((alert) => !alert.resolved && alert.acknowledged)
+    );
+    let declinedAlerts = $derived(
+      alertsLoaded.filter((alert) => !alert.resolved && isDeclined(alert))
+    );
+    let resolvedAlerts = $derived(
+      alertsLoaded.filter((alert) => alert.resolved)
+    );
 
   async function wsSetup() {
     WsMessageStore.subscribe(currentMessage => {
@@ -42,13 +53,6 @@
               return;
             }
             console.log('Parsed alert data:', alertData.data);
-            const alertInfo = {
-              PatientName: alertData.data.patient_id ? `Patient ${alertData.data.patient_id}` : 'Unknown',
-              AlertType: alertData.data.event?.type || 'Unknown Event',
-              RoomID: alertData.data.event?.device_id.toString() || 'N/A',
-              Timestamp: new Date(alertData.data.CreatedAt).toLocaleTimeString()
-            };
-            alerts = [alertInfo, ...alerts];
             alertsStore.update(alerts => [alertData.data, ...alerts]);
           } catch (error) {
             console.error('Failed to parse WebSocket message payload:', error);
@@ -71,12 +75,6 @@
       console.log('Fetched alerts:', response);
       const parseResult = tryParseAlerts(response);
       if (parseResult.success) {
-        alerts = parseResult.data.map(alert => ({
-          PatientName: alert.patient_id ? `Patient ${alert.patient_id}` : 'Unknown',
-          AlertType: alert.event?.type || 'Unknown Event',
-          RoomID: alert.event?.device_id.toString() || 'N/A',
-          Timestamp: new Date(alert.CreatedAt).toLocaleTimeString()
-        }));
         alertsStore.set(parseResult.data);
       } else {
         console.error('Failed to parse alerts:', parseResult.error);
@@ -96,7 +94,15 @@
         // whenever alerts changes, filter out known alerts and push them to the toast alerts queue
         // for every toast alert, set a timeout that deletes it
         const unsubscribe = alertsStore.subscribe((alerts) => {
+          console.log('Alerts store updated:', alerts);
             const currentIds = new Set(alerts.map((alert) => alert.ID));
+            // Source of truth for right panel is the global alerts store.
+            // Keep unresolved first for better operator visibility.
+            const sorted = [...alerts].sort((a, b) => {
+                if (a.resolved !== b.resolved) return a.resolved ? 1 : -1;
+                return new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime();
+            });
+            alertsLoaded = sorted;
             if (currentIds.size === 0) {
                 console.log('No alerts in store, skipping toast generation');
                 return;
@@ -145,16 +151,36 @@
         {@render children()}
         <div class="flex flex-col w-md bg-gray-50">
             <Alerts>
-            {#each alerts as alert}
-                <AlertItem
-                PatientName={alert.PatientName}
-                AlertType={alert.AlertType}
-                RoomID={alert.RoomID}
-                Timestamp={alert.Timestamp}
-                />
-            {/each}
-            {#if alerts.length === 0}
+          {#if alertsLoaded.length === 0}
                 <div class="text-gray-500 text-sm">No active alerts</div>
+          {:else}
+            {#if unacknowledgedAlerts.length > 0}
+              <div class="w-full text-left text-xs font-semibold uppercase tracking-wide text-primary-500">Unacknowledged</div>
+              {#each unacknowledgedAlerts as alert (alert.ID)}
+                <AlertItem {alert} />
+              {/each}
+            {/if}
+
+            {#if acknowledgedAlerts.length > 0}
+              <div class="w-full text-left text-xs font-semibold uppercase tracking-wide text-primary-600 mt-2">Acknowledged</div>
+              {#each acknowledgedAlerts as alert (alert.ID)}
+                <AlertItem {alert} />
+              {/each}
+            {/if}
+
+            {#if declinedAlerts.length > 0}
+              <div class="w-full text-left text-xs font-semibold uppercase tracking-wide text-slate-600 mt-2">Declined</div>
+              {#each declinedAlerts as alert (alert.ID)}
+                <AlertItem {alert} />
+              {/each}
+            {/if}
+
+            {#if resolvedAlerts.length > 0}
+              <div class="w-full text-left text-xs font-semibold uppercase tracking-wide text-emerald-700 mt-2">Resolved</div>
+              {#each resolvedAlerts as alert (alert.ID)}
+                <AlertItem {alert} />
+              {/each}
+            {/if}
             {/if}
             </Alerts>
         </div>

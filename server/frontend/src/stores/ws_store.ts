@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
-import { tryParseWSMessage, type WSMessage } from '../types/healthcare-db-types';
+import { tryParseAlert, tryParseWSMessage, type WSMessage } from '../types/healthcare-db-types';
+import { alertsStore } from './alerts';
 
 const WsMessageStore = writable<WSMessage | null>(null);
 const WsSocketStore = writable<WebSocket | null>(null);
@@ -18,7 +19,8 @@ socket.onopen = () => {
     "action": "subscribe",
     "topics": [
       `${topicPrefix}/${import.meta.env.VITE_FALL_EVENT_TOPIC}`,
-      `${topicPrefix}/${import.meta.env.VITE_ALERT_TOPIC}`
+      `${topicPrefix}/${import.meta.env.VITE_ALERT_TOPIC}`,
+      `${import.meta.env.VITE_ALERT_UPDATE_TOPIC}`
 
     ]
   }))
@@ -35,6 +37,24 @@ socket.onmessage = (event) => {
   const result = tryParseWSMessage(event.data);
   if (result.success) {
     WsMessageStore.set(result.data);
+    if (result.data.topic === `${import.meta.env.VITE_ALERT_UPDATE_TOPIC}`) {
+      console.log('Received alert update:', result.data.payload);
+      const alertUpdate = tryParseAlert(result.data.payload);
+      if (alertUpdate.success) {
+        console.log('Parsed alert update:', alertUpdate.data);
+        alertsStore.update(alerts => {
+          const index = alerts.findIndex(alert => alert.ID === alertUpdate.data.ID);
+          if (index !== -1) {
+            const updatedAlerts = [...alerts];
+            updatedAlerts[index] = alertUpdate.data;
+            return updatedAlerts;
+          }
+          return alerts;
+        });
+      } else {
+        console.error('Failed to parse alert update:', alertUpdate.error);
+      }
+    }
   } else {
     console.error('Failed to parse WebSocket message:', result.error);
   }
