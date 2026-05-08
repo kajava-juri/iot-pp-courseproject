@@ -3,7 +3,6 @@ package main
 import (
 	"backend/api/routes"
 	postgres "backend/database"
-	"backend/database/models"
 	"backend/database/services"
 	handlers "backend/mqtt"
 	mqttClient "backend/pkg/mqtt"
@@ -128,27 +127,7 @@ func main() {
 		}
 	})
 
-	r.Get("/alert/all/unresolved", func(w http.ResponseWriter, r *http.Request) {
-		alerts, err := services.Alert.GetAll(&models.Alert{Resolved: false})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		unresolvedAlerts := make([]models.Alert, 0)
-		for _, alert := range alerts {
-			if !alert.Resolved {
-				unresolvedAlerts = append(unresolvedAlerts, alert)
-			}
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(unresolvedAlerts); err != nil {
-			log.Printf("Failed to encode alerts to JSON: %v", err)
-		}
-	})
-
+	r.Mount("/alert", routes.AlertRoutes(wsHub))
 	r.Mount("/patient", routes.PatientRoutes())
 	r.Mount("/room", routes.RoomRoutes())
 
