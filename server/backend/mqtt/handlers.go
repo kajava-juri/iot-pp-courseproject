@@ -39,21 +39,36 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 		log.Printf("Fall event => %s", payload)
 
 		parts := strings.SplitN(strings.TrimPrefix(topic, "/"), "/", 2)
-		deviceIDStr := ""
+		deviceNameStr := ""
 		if len(parts) > 0 {
-			deviceIDStr = parts[0]
+			deviceNameStr = parts[0]
 		}
-		alertTopic := deviceIDStr + "/alert/fall"
+		alertTopic := deviceNameStr + "/alert/fall"
 
-		// Lookup device by Device.DeviceID (registered devices only)
-		device, err := services.Device.GetByDeviceID(deviceIDStr)
+		// Lookup device by business device name (registered devices only)
+		device, err := services.Device.GetByDeviceName(deviceNameStr)
 		if err != nil {
-			log.Printf("Unknown device %s: %v", deviceIDStr, err)
+			log.Printf("Unknown device %s: %v", deviceNameStr, err)
 			return
 		}
 
-		// Create event and attach the device's internal ID
-		event := &models.Event{Type: models.EventTypeFall, DeviceID: device.ID}
+		patients := make([]models.Patient, 0, 1)
+		if device.Patient != nil {
+			patients = append(patients, *device.Patient)
+		}
+
+		rooms := make([]models.Room, 0, 1)
+		if device.Room != nil {
+			rooms = append(rooms, *device.Room)
+		}
+
+		// Create event and attach available device relations.
+		event := &models.Event{
+			Type:     models.EventTypeFall,
+			DeviceID: device.ID,
+			Patients: patients,
+			Rooms:    rooms,
+		}
 
 		if err := services.Event.Create(event); err != nil {
 			log.Printf("Failed to create fall event: %v", err)
@@ -62,9 +77,10 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 		}
 
 		alert := &models.Alert{
-			EventID:  &event.ID,
-			Severity: "high",
-			Message:  fmt.Sprintf("Fall detected: %s", payload),
+			EventID:   &event.ID,
+			PatientID: device.PatientID,
+			Severity:  "high",
+			Message:   fmt.Sprintf("Fall detected: %s", payload),
 		}
 		if err := services.Alert.Create(alert); err != nil {
 			log.Printf("Failed to create fall alert: %v", err)

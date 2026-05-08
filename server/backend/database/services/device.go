@@ -19,9 +19,17 @@ func (s DeviceService) Create(device *models.Device) error {
 	return nil
 }
 
+func (s DeviceService) List() ([]models.Device, error) {
+	var devices []models.Device
+	if err := postgres.DB().Preload("Room").Preload("Patient").Find(&devices).Error; err != nil {
+		return nil, fmt.Errorf("failed to list devices: %w", err)
+	}
+	return devices, nil
+}
+
 func (s DeviceService) GetByID(id uint) (*models.Device, error) {
 	var device models.Device
-	result := postgres.DB().Preload("Room").First(&device, id)
+	result := postgres.DB().Preload("Room").Preload("Patient").First(&device, id)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("device %d not found: %w", id, result.Error)
@@ -31,14 +39,14 @@ func (s DeviceService) GetByID(id uint) (*models.Device, error) {
 	return &device, nil
 }
 
-func (s DeviceService) GetByDeviceID(deviceID string) (*models.Device, error) {
+func (s DeviceService) GetByDeviceName(deviceName string) (*models.Device, error) {
 	var device models.Device
-	result := postgres.DB().Preload("Room").Where("device_id = ?", deviceID).First(&device)
+	result := postgres.DB().Preload("Room").Preload("Patient").Where("device_name = ?", deviceName).First(&device)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("device %s not found: %w", deviceID, result.Error)
+			return nil, fmt.Errorf("device %s not found: %w", deviceName, result.Error)
 		}
-		return nil, fmt.Errorf("failed to get device %s: %w", deviceID, result.Error)
+		return nil, fmt.Errorf("failed to get device %s: %w", deviceName, result.Error)
 	}
 	return &device, nil
 }

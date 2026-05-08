@@ -19,6 +19,7 @@ const (
 type Event struct {
 	gorm.Model
 	DeviceID uint      `gorm:"index" json:"device_id" db:"device_id"`
+	Device   Device    `gorm:"foreignKey:DeviceID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"device"`
 	Type     EventType `gorm:"type:text;index;not null" json:"type"`
 	Rooms    []Room    `gorm:"many2many:event_rooms;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"rooms,omitempty"`
 	Patients []Patient `gorm:"many2many:event_patients;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"patients,omitempty"`

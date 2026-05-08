@@ -130,6 +130,7 @@ func main() {
 	r.Mount("/alert", routes.AlertRoutes(wsHub))
 	r.Mount("/patient", routes.PatientRoutes())
 	r.Mount("/room", routes.RoomRoutes())
+	r.Mount("/event", routes.EventRoutes())
 
 	// 4. Run the Server
 	// Start server in goroutine

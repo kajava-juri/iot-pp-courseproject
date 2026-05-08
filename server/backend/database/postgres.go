@@ -124,14 +124,16 @@ func InitDb() error {
 		room1 := models.Room{RoomName: "Room 101"}
 		db.Create(&room1)
 		for i := 102; i <= 211; i++ {
-			db.Create(&models.Room{RoomName: fmt.Sprintf("Room %d", i)})
+			db.Create(&models.Room{RoomName: fmt.Sprintf("A%d", i)})
 		}
 
 		// Patient
-		db.Create(&models.Patient{Name: "John Doe", PatientID: "patient_001", RoomID: room1.ID})
+		db.Create(&models.Patient{Name: "John Doe", HealthID: "health_001", RoomID: room1.ID})
 		// Device
-		db.Create(&models.Device{Name: "wearable_device_1", DeviceID: "ESP16", Description: "IMU and DHT", RoomID: room1.ID})
-		db.Create(&models.Device{Name: "room_device_1", DeviceID: "ESP60", Description: "PIR sensor", RoomID: room1.ID})
+		patientID := uint(1)
+		roomID := room1.ID
+		db.Create(&models.Device{Name: "wearable_device_1", DeviceName: "ESP16", Description: "IMU and DHT", PatientID: &patientID})
+		db.Create(&models.Device{Name: "room_device_1", DeviceName: "ESP60", Description: "PIR sensor", RoomID: &roomID})
 	}
 
 	log.Println("Connected to PostgreSQL")

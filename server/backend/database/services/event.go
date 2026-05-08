@@ -46,3 +46,28 @@ func (s EventService) Delete(id uint) error {
 	}
 	return nil
 }
+
+func (s EventService) List(page int, pageSize int) ([]models.Event, error) {
+	// Validate and constrain pageSize
+	if pageSize < 50 {
+		pageSize = 50
+	}
+	if pageSize > 200 {
+		pageSize = 200
+	}
+
+	// Ensure page is at least 1
+	if page < 1 {
+		page = 1
+	}
+
+	// Calculate offset
+	offset := (page - 1) * pageSize
+
+	var events []models.Event
+	result := postgres.DB().Offset(offset).Limit(pageSize).Preload("Rooms").Preload("Patients").Find(&events)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get events: %w", result.Error)
+	}
+	return events, nil
+}

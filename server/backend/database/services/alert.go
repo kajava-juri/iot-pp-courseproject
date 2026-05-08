@@ -16,7 +16,7 @@ var Alert = AlertService{}
 
 func (s AlertService) GetAll(alert *models.Alert) ([]models.Alert, error) {
 	var alerts []models.Alert
-	result := postgres.DB().Where(alert).Preload("Event").Find(&alerts)
+	result := postgres.DB().Where(alert).Preload("Patient").Preload("Patient.Room").Preload("Event").Find(&alerts)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to get alerts: %w", result.Error)
 	}
@@ -38,17 +38,17 @@ func (s AlertService) Update(alert *models.Alert) error {
 		return fmt.Errorf("alert ID is required")
 	}
 
-	updates := map[string]any{
-		"event_id":     alert.EventID,
-		"patient_id":   alert.PatientID,
-		"severity":     alert.Severity,
-		"message":      alert.Message,
-		"acknowledged": alert.Acknowledged,
-		"resolved":     alert.Resolved,
-		"resolved_at":  alert.ResolvedAt,
-	}
+	// updates := map[string]any{
+	// 	"event_id":     alert.EventID,
+	// 	"patient_id":   alert.PatientID,
+	// 	"severity":     alert.Severity,
+	// 	"message":      alert.Message,
+	// 	"acknowledged": alert.Acknowledged,
+	// 	"resolved":     alert.Resolved,
+	// 	"resolved_at":  alert.ResolvedAt,
+	// }
 
-	result := postgres.DB().Model(&models.Alert{}).Where("id = ?", alert.ID).Updates(updates)
+	result := postgres.DB().Model(&models.Alert{}).Where("id = ?", alert.ID).Updates(&alert)
 	if result.Error != nil {
 		return fmt.Errorf("failed to update alert %d: %w", alert.ID, result.Error)
 	}
@@ -61,7 +61,7 @@ func (s AlertService) Update(alert *models.Alert) error {
 
 func (s AlertService) GetByID(id uint) (*models.Alert, error) {
 	var alert models.Alert
-	result := postgres.DB().Preload("Event").First(&alert, id)
+	result := postgres.DB().Preload("Patient").Preload("Event").First(&alert, id)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("alert %d not found: %w", id, result.Error)

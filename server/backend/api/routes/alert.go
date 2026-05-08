@@ -37,18 +37,18 @@ func BroadcastAlertUpdate(hub *websockets.WsHub, alert *models.Alert) {
 }
 
 func (h *AlertHandler) ListUnresolvedAlerts(w http.ResponseWriter, r *http.Request) {
-	alerts, err := services.Alert.GetAll(&models.Alert{Resolved: false})
+	unresolvedAlerts, err := services.Alert.GetAll(&models.Alert{Resolved: false})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	unresolvedAlerts := make([]models.Alert, 0)
-	for _, alert := range alerts {
-		if !alert.Resolved {
-			unresolvedAlerts = append(unresolvedAlerts, alert)
-		}
-	}
+	// unresolvedAlerts := make([]models.Alert, 0)
+	// for _, alert := range alerts {
+	// 	if !alert.Resolved {
+	// 		unresolvedAlerts = append(unresolvedAlerts, alert)
+	// 	}
+	// }
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
