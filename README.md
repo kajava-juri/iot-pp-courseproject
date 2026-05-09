@@ -1,11 +1,11 @@
 # IoT Course Project
 
-A full-stack IoT system consisting of three Docker-based server services and three PlatformIO-based edge nodes.
+IoT course project consisting of server and edge_nodes projects. Server includes both the frontend, backend and postgres database - all deployed using Docker. Edge nodes are the ESP microcontroller programs that read sensor data, process it and communicate with backend through MQTT protocol.
 
 ## Project Structure
 
 **A couple notes**
-- mosquitto probably will not be used because TalTech has its own MQTT broker
+- mosquitto should be used in production, but for demo we use TalTech's MQTT server
 - nodered is there but most of the logic and message handling will be done using the Golang project -
   Golang gives proper package structure, interfaces, dependency injection, and testable units compared to Node-RED, it is also compiled and easily deployed and has much smaller memory footprint.
 
@@ -105,9 +105,9 @@ Each sub-folder under `edge_nodes/` is an independent PlatformIO project.
 
 | Node             | Role                                                   |
 |------------------|--------------------------------------------------------|
-| `wearable_node`  | Wearable sensor – collects health/activity data        |
-| `room_node`      | Room sensor – temperature, humidity, CO₂               |
-| `interface_node` | Gateway – interface with the user (OLED, relay?)       |
+| `wearable_node`  | Wearable sensor – collects health/activity data and IMU for fall detection       |
+| `room_node`      | Room sensor – temperature, humidity, vibration               |
+| `interface_node` | Gateway – interface with the user (OLED, relay, buttons)       |
 
 ### Build & flash
 
