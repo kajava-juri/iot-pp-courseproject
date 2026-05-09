@@ -4,17 +4,20 @@
 #include <ittiot.h>
 #include <Ticker.h>
 #include <Wire.h>
-#include <DHT.h>
+#include <ClickEncoder.h>
 
 #include "iot_common.h"
 
 // Control if sensor is enabled (connected)
-#define DHT_ENABLE 0
+#define ENCODER_ENABLE 1
 #define IMU_ENABLE 1
 
-// Defining pins for DHT sensor
-#define DHTPIN D3
-#define DHTTYPE DHT22
+// Defining pins for encoder
+#define ENC_PINA 12
+#define ENC_PINB 13
+#define ENC_BTN 0
+#define ENC_STEPS_PER_NOTCH 4
+#define ENCODER_THRESHOLD 5  // threshold for rate of change detection
 #define PRINT_INTERVAL_MS 40
 // Fall detection windows
 #define PEAK_WINDOW 5    // short window for local peak (samples)
@@ -22,11 +25,13 @@
 #define REFRACTORY_MS 2000
 
 Adafruit_MPU6050 mpu;
-DHT dht(DHTPIN, DHTTYPE);
+ClickEncoder encoder(ENC_PINA, ENC_PINB, ENC_BTN, ENC_STEPS_PER_NOTCH);
 
-Ticker dhtTicker;
+Ticker encTicker;
 
-bool sendDHTFlag = false;
+bool encFlag = false;
+int16_t lastEncoderValue = 0;
+int16_t lastEncoderDelta = 0;
 unsigned long lastAccelPrintTime = 0;
 // Sliding-max deque (small window)
 float peakVal[PEAK_WINDOW];
@@ -55,8 +60,8 @@ void publishReading(const char *topic, float value) {
   iot.publishMsg(topic, buf);
 }
 
-void sendDHT() {
-  sendDHTFlag = true;
+void setEncFlag() {
+  encFlag = true;
 }
 
 void setup(void) {
@@ -75,10 +80,11 @@ void setup(void) {
   iot.printConfig();
   iot.setup();
 
-  // Initialize DHT sensor
-  #if DHT_ENABLE
-  dht.begin();
-  dhtTicker.attach(1, sendDHT);
+  // Initialize Encoder
+  #if ENCODER_ENABLE
+  encoder.setButtonHeldEnabled(true);
+  encoder.setDoubleClickEnabled(true);
+  encTicker.attach(1, setEncFlag);
   #endif
 
   #if IMU_ENABLE
@@ -107,15 +113,47 @@ void loop() {
 
   delay(10);
 
-  if (sendDHTFlag) {
-    sendDHTFlag = false;
-    // Read humidity and temperature
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
-
-    publishReading("temp", t);
-    publishReading("hum", h);
+  #if ENCODER_ENABLE
+  // Service the encoder
+  static uint32_t lastService = 0;
+  if (lastService + 1000 < micros()) {
+    lastService = micros();
+    encoder.service();
   }
+  
+  // Read encoder value
+  static int16_t encoderValue = 0;
+  encoderValue += encoder.getValue();
+  
+  // Detect rapid changes in encoder value
+  if (encFlag) {
+    encFlag = false;
+    int16_t currentDelta = encoderValue - lastEncoderValue;
+    int16_t deltaChange = currentDelta - lastEncoderDelta;  // acceleration (change in rate)
+    
+    Serial.print("Encoder Value: ");
+    Serial.print(encoderValue);
+    Serial.print(", Delta: ");
+    Serial.print(currentDelta);
+    Serial.print(", Acceleration: ");
+    Serial.println(deltaChange);
+    
+    // Publish encoder value
+    char buf[16];
+    String(encoderValue).toCharArray(buf, sizeof(buf));
+    iot.publishMsg("enc", buf);
+    
+    // Check if rate of change exceeds threshold
+    if (abs(currentDelta) > ENCODER_THRESHOLD) {
+      Serial.println("Rapid encoder change detected! Value: " + String(currentDelta));
+      String msg = String(currentDelta);
+      iot.publishMsg("event/encoder_rapid", msg.c_str());
+    }
+    
+    lastEncoderValue = encoderValue;
+    lastEncoderDelta = currentDelta;
+  }
+  #endif
 
   #if IMU_ENABLE
   if (mpu.getMotionInterruptStatus()) {
