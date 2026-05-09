@@ -89,7 +89,122 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 			return
 		}
 
+		// reproadcast event
 		wsHub.BroadcastToTopic(msg.Payload(), topic)
+		// broadcast alert
+		wsHub.BroadcastToTopic(alertJSON, alertTopic)
+		client.Publish(alertTopic, 1, false, alertJSON)
+	}
+}
+
+func MotionEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
+	return func(client mqtt.Client, msg mqtt.Message) {
+		topic := msg.Topic()
+		payload := string(msg.Payload())
+		log.Printf("Motion event => %s", payload)
+
+		parts := strings.SplitN(strings.TrimPrefix(topic, "/"), "/", 2)
+		deviceNameStr := ""
+		if len(parts) > 0 {
+			deviceNameStr = parts[0]
+		}
+		// alertTopic := deviceNameStr + "/alert/motion"
+
+		// Lookup device by business device name (registered devices only)
+		device, err := services.Device.GetByDeviceName(deviceNameStr)
+		if err != nil {
+			log.Printf("Unknown device %s: %v", deviceNameStr, err)
+			return
+		}
+
+		// Create event and attach available device relations.
+		event := &models.Event{
+			Type:      models.EventTypeMotionDetected,
+			DeviceID:  device.ID,
+			PatientID: device.PatientID,
+			Patient:   device.Patient,
+			RoomID:    device.RoomID,
+			Room:      device.Room,
+		}
+
+		if err := services.Event.Create(event); err != nil {
+			log.Printf("Failed to create motion event: %v", err)
+			wsHub.BroadcastToTopic(msg.Payload(), topic)
+			return
+		}
+
+		// motion alone is not enough to trigger an alert, but we broadcast the event to any interested clients
+		eventJSON, err := json.Marshal(event)
+		if err != nil {
+			log.Printf("Failed to marshal motion event: %v", err)
+			wsHub.BroadcastToTopic(msg.Payload(), topic)
+			return
+		}
+
+		wsHub.BroadcastToTopic(eventJSON, topic)
+	}
+}
+
+func VibrationEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
+	return func(client mqtt.Client, msg mqtt.Message) {
+		topic := msg.Topic()
+		payload := string(msg.Payload())
+		log.Printf("Vibration event => %s", payload)
+
+		parts := strings.SplitN(strings.TrimPrefix(topic, "/"), "/", 2)
+		deviceNameStr := ""
+		if len(parts) > 0 {
+			deviceNameStr = parts[0]
+		}
+		alertTopic := deviceNameStr + "/alert/vibration"
+
+		// Lookup device by business device name (registered devices only)
+		device, err := services.Device.GetByDeviceName(deviceNameStr)
+		if err != nil {
+			log.Printf("Unknown device %s: %v", deviceNameStr, err)
+			return
+		}
+
+		// Create event and attach available device relations.
+		event := &models.Event{
+			Type:      "vibration",
+			DeviceID:  device.ID,
+			PatientID: device.PatientID,
+			Patient:   device.Patient,
+			RoomID:    device.RoomID,
+			Room:      device.Room,
+		}
+
+		if err := services.Event.Create(event); err != nil {
+			log.Printf("Failed to create vibration event: %v", err)
+			wsHub.BroadcastToTopic(msg.Payload(), topic)
+			return
+		}
+
+		alert := &models.Alert{
+			EventID:   &event.ID,
+			PatientID: device.PatientID,
+			Patient:   device.Patient,
+			Severity:  "medium",
+			Message:   fmt.Sprintf("Vibration detected: %s", payload),
+		}
+		if err := services.Alert.Create(alert); err != nil {
+			log.Printf("Failed to create vibration alert: %v", err)
+			wsHub.BroadcastToTopic(msg.Payload(), topic)
+			return
+		}
+
+		alert.Event = event
+		alertJSON, err := json.Marshal(alert)
+		if err != nil {
+			log.Printf("Failed to marshal vibration alert: %v", err)
+			wsHub.BroadcastToTopic(msg.Payload(), topic)
+			return
+		}
+
+		// reproadcast event
+		wsHub.BroadcastToTopic(msg.Payload(), topic)
+		// broadcast alert
 		wsHub.BroadcastToTopic(alertJSON, alertTopic)
 		client.Publish(alertTopic, 1, false, alertJSON)
 	}
