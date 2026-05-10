@@ -71,7 +71,8 @@ export const EventTypeEnum = z.enum([
   'fall',
   'abnormal_temperature',
   'temperature_reading',
-  'motion_detected'
+  'motion_detected',
+  'vibration'
 ]);
 
 export type EventType = z.infer<typeof EventTypeEnum>;

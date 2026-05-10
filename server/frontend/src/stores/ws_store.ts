@@ -20,8 +20,8 @@ socket.onopen = () => {
     "topics": [
       `${topicPrefix}/${import.meta.env.VITE_FALL_EVENT_TOPIC}`,
       `${topicPrefix}/${import.meta.env.VITE_ALERT_TOPIC}`,
-      `${import.meta.env.VITE_ALERT_UPDATE_TOPIC}`
-
+      `${import.meta.env.VITE_ALERT_UPDATE_TOPIC}`,
+      `${topicPrefix}/alert/vibration`
     ]
   }))
 };

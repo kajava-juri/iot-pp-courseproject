@@ -15,6 +15,7 @@
     type Alert as DbAlert,
   } from "$types/healthcare-db-types";
   import AlertItem from "$components/AlertItem.svelte";
+    import { parse } from "svelte/compiler";
 
   type ToastAlert = {
     toastId: string;
@@ -48,7 +49,7 @@
       if (currentMessage) {
         console.log("Received WebSocket message:", currentMessage);
 
-        if (currentMessage.topic.endsWith("/alert/fall")) {
+        if (currentMessage.topic.includes("/alert")) {
           let alertDataJson = currentMessage.payload;
           try {
             let alertData = tryParseAlert(alertDataJson);
