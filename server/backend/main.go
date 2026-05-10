@@ -53,9 +53,14 @@ func main() {
 
 	subs := []mqttClient.Subscription{
 		{
-			Topic:   imuTopicPrefix + "/" + fallTopic + "/#",
+			Topic:   imuTopicPrefix + "/" + fallTopic,
 			Qos:     1,
 			Handler: handlers.FallEventMessageHandler(wsHub),
+		},
+		{
+			Topic:   imuTopicPrefix + "/event/vibration",
+			Qos:     1,
+			Handler: handlers.VibrationEventMessageHandler(wsHub),
 		},
 	}
 
@@ -89,7 +94,7 @@ func main() {
 
 	// 3. Create a Dummy API (GET Endpoint)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World"))
+		w.Write([]byte("Hello World\n"))
 	})
 
 	r.Get("/event/{id}", func(w http.ResponseWriter, r *http.Request) {

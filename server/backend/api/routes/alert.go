@@ -37,7 +37,7 @@ func BroadcastAlertUpdate(hub *websockets.WsHub, alert *models.Alert) {
 }
 
 func (h *AlertHandler) ListUnresolvedAlerts(w http.ResponseWriter, r *http.Request) {
-	unresolvedAlerts, err := services.Alert.GetAll(&models.Alert{Resolved: false})
+	unresolvedAlerts, err := services.Alert.GetAll(&models.Alert{Resolved: false, Declined: false})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
