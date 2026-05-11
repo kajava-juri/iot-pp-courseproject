@@ -25,9 +25,10 @@ try:
             # strip stray trailing tokens like ' -D' if present (actually dont know how it happens, but need to remove it if present)
             if value.endswith(' -D'):
                 value = value[:-3].rstrip()
-            safe_value = '"' + value.replace('"', '\\"') + '"'
-            print(f'Adding CPPDEFINE: {key}={safe_value}')
-            env.Append(CPPDEFINES=[f'{key}={safe_value}'])
+            # safe_value = '"' + value.replace('"', '\\"') + '"'
+            # print(f'Adding CPPDEFINE: {key}={safe_value}')
+            # env.Append(CPPDEFINES=[f'{key}={safe_value}'])
+            env.Append(CPPDEFINES=[(key, value)])
 except IOError:
     print("File .env is not accessible")
 finally:
