@@ -51,6 +51,28 @@ func (s PatientService) GetByID(id uint) (*models.Patient, error) {
 	return &patient, nil
 }
 
+func (s PatientService) UpdateStatus(id uint, status string) (*models.Patient, bool, error) {
+	patient, err := s.GetByID(id)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if patient.Status == status {
+		return patient, false, nil
+	}
+
+	if err := postgres.DB().Model(&models.Patient{}).Where("id = ?", id).Update("status", status).Error; err != nil {
+		return nil, false, fmt.Errorf("failed to update patient %d status: %w", id, err)
+	}
+
+	updatedPatient, err := s.GetByID(id)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return updatedPatient, true, nil
+}
+
 func (s PatientService) Delete(id uint) error {
 	if err := postgres.DB().Delete(&models.Patient{}, id).Error; err != nil {
 		return fmt.Errorf("failed to delete patient %d: %w", id, err)

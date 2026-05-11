@@ -1,18 +1,15 @@
 <script lang="ts">
-
-  import { tryParsePatient, type Patient } from '../types/healthcare-db-types';
+  import { onMount } from 'svelte';
+  import { WsMessageStore, WsSocketStore } from '$stores/ws_store';
+  import { tryParsePatient, type Patient, type WSMessage } from '../types/healthcare-db-types';
   import PatientList from '$components/PatientList.svelte';
   import PatientItem from '$components/PatientItem.svelte';
   import Alerts from '$components/Alerts.svelte';
   import AlertItem from '$components/AlertItem.svelte';
-  import { onMount } from 'svelte';
   import { alertsStore } from '$stores/alerts';
   import { Alert } from "flowbite-svelte";
   import { InfoCircleSolid } from "flowbite-svelte-icons";
     import { fetcher } from '../utils/fetcher';
-
-
-  type Severity = 'high' | 'medium' | 'low' | 'none';
 
 
 
@@ -23,18 +20,77 @@
 
   let selectedId = $state<number | null>(null);
 
-  onMount(async () => {
-    // Fetch patients from the backend
-    try {
-      const response = (await fetcher('/patient')).data;
-      console.log('Fetched patients:', response);
-      // Assuming the response is an array of patients with the expected structure
-      const parsedPatients = response.map((p: unknown) => tryParsePatient(p)).filter((result: any) => result.success).map((result: any) => result.data);
-      patients = parsedPatients;
-      console.log('Parsed patients:', parsedPatients);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-    }
+  onMount(() => {
+    let currentSocket: WebSocket | null = null;
+
+    const unsubscribeSocket = WsSocketStore.subscribe((socket) => {
+      if (!socket) {
+        currentSocket = null;
+        return;
+      }
+
+      currentSocket = socket;
+      socket.send(JSON.stringify({
+        action: 'subscribe',
+        topics: ['/patient/update'],
+      }));
+    });
+
+    const unsubscribeMessages = WsMessageStore.subscribe((currentMessage: WSMessage | null) => {
+      if (!currentMessage || currentMessage.topic !== '/patient/update') {
+        return;
+      }
+
+      const parsedPatient = tryParsePatient(currentMessage.payload);
+      if (!parsedPatient.success) {
+        console.error('Failed to parse patient update:', parsedPatient.error);
+        return;
+      }
+
+      const updatedPatient = parsedPatient.data;
+      patients = patients.map((patient) => (
+        patient.ID === updatedPatient.ID ? updatedPatient : patient
+      ));
+    });
+
+    void (async () => {
+      // Fetch patients from the backend
+      try {
+        const response = (await fetcher('/patient')).data;
+        console.log('Fetched patients:', response);
+        // Assuming the response is an array of patients with the expected structure
+        const parsedPatients = response
+          .map((patient: unknown) => tryParsePatient(patient))
+          .filter((result: any) => result.success)
+          .map((result: any) => result.data);
+
+        patients = parsedPatients.map((fetchedPatient: Patient) => {
+          const existingPatient = patients.find((patient) => patient.ID === fetchedPatient.ID);
+          if (!existingPatient) {
+            return fetchedPatient;
+          }
+
+          return new Date(existingPatient.UpdatedAt).getTime() > new Date(fetchedPatient.UpdatedAt).getTime()
+            ? existingPatient
+            : fetchedPatient;
+        });
+
+        console.log('Parsed patients:', parsedPatients);
+      } catch (error) {
+        console.error('Error fetching patients:', error);
+      }
+    })();
+
+    return () => {
+      unsubscribeMessages();
+      unsubscribeSocket();
+      if (currentSocket?.readyState === WebSocket.OPEN) {
+        currentSocket.send(JSON.stringify({
+          action: 'unsubscribe',
+          topics: ['/patient/update'],
+        }));
+      }
+    };
   });
 </script>
 
@@ -45,9 +101,7 @@
         name={p.name}
         healthId={p.health_id}
         roomName={p.room?.room_name || 'Unassigned'}
-        // severity={p.severity}
-        // lastEvent={p.lastEvent}
-        // lastEventTime={p.lastEventTime}
+        status={p.status}
         selected={selectedId === p.ID}
         onclick={() => selectedId = p.ID}
       />

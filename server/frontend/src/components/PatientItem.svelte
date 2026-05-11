@@ -1,11 +1,9 @@
 <script lang="ts">
-  type Severity = 'high' | 'medium' | 'low' | 'none';
-
   interface Props {
     name: string;
     healthId: string;
     roomName: string;
-    severity?: Severity;
+    status?: string;
     lastEvent?: string;
     lastEventTime?: string;
     selected?: boolean;
@@ -16,19 +14,26 @@
     name,
     healthId,
     roomName,
-    severity = 'none',
+    status = 'none',
     lastEvent,
     lastEventTime,
     selected = false,
     onclick,
   }: Props = $props();
 
-  const dotColor: Record<Severity, string> = {
-    high:   'bg-red-500',
-    medium: 'bg-amber-400',
-    low:    'bg-yellow-300',
-    none:   'bg-emerald-500',
-  };
+  function dotClassForStatus(value: string): string {
+    switch (value.toLowerCase()) {
+      case 'critical':
+      case 'high':
+        return 'bg-red-500';
+      case 'medium':
+        return 'bg-amber-400';
+      case 'low':
+        return 'bg-yellow-300';
+      default:
+        return 'bg-emerald-500';
+    }
+  }
 </script>
 
 <li>
@@ -39,13 +44,14 @@
       {selected ? 'bg-primary-50 border-l-2 border-primary-600' : 'border-l-2 border-transparent'}"
   >
     <!-- Status dot -->
-    <span class="w-2.5 h-2.5 rounded-full shrink-0 {dotColor[severity]}"></span>
+    <span class="w-2.5 h-2.5 rounded-full shrink-0 {dotClassForStatus(status)}"></span>
 
     <!-- Info -->
     <div class="flex-1 min-w-0">
       <p class="text-sm font-medium text-gray-900 truncate">{name}</p>
       <p class="text-xs text-gray-500 truncate">
         ID: {healthId}
+        · <span class="text-gray-400">{status || 'none'}</span>
         {#if lastEvent}
           · <span class="text-gray-400">{lastEvent}</span>
         {/if}

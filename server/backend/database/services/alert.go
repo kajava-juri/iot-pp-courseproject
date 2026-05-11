@@ -4,6 +4,7 @@ import (
 	postgres "backend/database"
 	"backend/database/models"
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -28,6 +29,55 @@ func (s AlertService) Create(alert *models.Alert) error {
 		return fmt.Errorf("failed to create alert: %w", err)
 	}
 	return nil
+}
+
+func (s AlertService) GetActiveByPatientID(patientID uint) ([]models.Alert, error) {
+	var alerts []models.Alert
+	result := postgres.DB().Where("patient_id = ? AND resolved = ? AND declined = ?", patientID, false, false).
+		Preload("Patient").
+		Preload("Event").
+		Preload("Event.Room").
+		Find(&alerts)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get active alerts for patient %d: %w", patientID, result.Error)
+	}
+	return alerts, nil
+}
+
+func (s AlertService) GetPatientStatus(patientID uint) (string, error) {
+	alerts, err := s.GetActiveByPatientID(patientID)
+	if err != nil {
+		return "", err
+	}
+	if len(alerts) == 0 {
+		return "", nil
+	}
+
+	status := alerts[0].Severity
+	statusWeight := severityWeight(status)
+	for _, alert := range alerts[1:] {
+		if weight := severityWeight(alert.Severity); weight > statusWeight {
+			status = alert.Severity
+			statusWeight = weight
+		}
+	}
+
+	return status, nil
+}
+
+func severityWeight(severity string) int {
+	switch strings.ToLower(severity) {
+	case "critical":
+		return 4
+	case "high":
+		return 3
+	case "medium":
+		return 2
+	case "low":
+		return 1
+	default:
+		return 0
+	}
 }
 
 func (s AlertService) Update(alert *models.Alert) error {

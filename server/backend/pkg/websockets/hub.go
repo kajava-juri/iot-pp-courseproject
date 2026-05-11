@@ -32,6 +32,21 @@ func (h *WsHub) BroadcastMessage(message []byte) {
 	h.broadcast <- message
 }
 
+func BroadcastJSONToTopic(hub *WsHub, topic string, payload any) {
+	if hub == nil {
+		log.Printf("Websocket hub is nil, cannot broadcast topic %s", topic)
+		return
+	}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("Failed to marshal payload for topic %s: %v", topic, err)
+		return
+	}
+
+	hub.BroadcastToTopic(b, topic)
+}
+
 func (h *WsHub) BroadcastToTopic(message []byte, topic string) {
 	if clients, ok := h.topicSubscriptions[topic]; ok {
 		// Wrap payload with topic metadata. If payload is JSON, keep it as JSON

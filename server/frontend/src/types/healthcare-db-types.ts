@@ -50,6 +50,7 @@ export const PatientSchema = z.object({
   DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
   name: z.string(),
   health_id: z.string(),
+  status: z.string().default(''),
   room: RoomSchema.nullable(),
 });
 

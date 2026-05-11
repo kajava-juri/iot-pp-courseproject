@@ -81,6 +81,17 @@ func FallEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 			return
 		}
 
+		if alert.PatientID != nil {
+			status, err := services.Alert.GetPatientStatus(*alert.PatientID)
+			if err != nil {
+				log.Printf("Failed to derive patient %d status from active alerts: %v", *alert.PatientID, err)
+			} else if patient, changed, err := services.Patient.UpdateStatus(*alert.PatientID, status); err != nil {
+				log.Printf("Failed to update patient %d status: %v", *alert.PatientID, err)
+			} else if changed {
+				websockets.BroadcastJSONToTopic(wsHub, "/patient/update", patient)
+			}
+		}
+
 		alert.Event = event
 		alertJSON, err := json.Marshal(alert)
 		if err != nil {
@@ -192,6 +203,17 @@ func VibrationEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 			log.Printf("Failed to create vibration alert: %v", err)
 			wsHub.BroadcastToTopic(msg.Payload(), topic)
 			return
+		}
+
+		if alert.PatientID != nil {
+			status, err := services.Alert.GetPatientStatus(*alert.PatientID)
+			if err != nil {
+				log.Printf("Failed to derive patient %d status from active alerts: %v", *alert.PatientID, err)
+			} else if patient, changed, err := services.Patient.UpdateStatus(*alert.PatientID, status); err != nil {
+				log.Printf("Failed to update patient %d status: %v", *alert.PatientID, err)
+			} else if changed {
+				websockets.BroadcastJSONToTopic(wsHub, "/patient/update", patient)
+			}
 		}
 
 		alert.Event = event

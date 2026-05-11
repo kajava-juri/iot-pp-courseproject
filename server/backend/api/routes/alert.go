@@ -36,6 +36,33 @@ func BroadcastAlertUpdate(hub *websockets.WsHub, alert *models.Alert) {
 	hub.BroadcastToTopic(b, "alert/updates")
 }
 
+func broadcastPatientUpdate(hub *websockets.WsHub, patient *models.Patient) {
+	websockets.BroadcastJSONToTopic(hub, "/patient/update", patient)
+}
+
+func updatePatientStatusFromAlerts(hub *websockets.WsHub, patientID *uint) {
+	if patientID == nil {
+		return
+	}
+
+	status, err := services.Alert.GetPatientStatus(*patientID)
+	if err != nil {
+		log.Printf("Failed to derive patient %d status from active alerts: %v", *patientID, err)
+		return
+	}
+
+	patient, changed, err := services.Patient.UpdateStatus(*patientID, status)
+	if err != nil {
+		log.Printf("Failed to update patient %d status: %v", *patientID, err)
+		return
+	}
+	if !changed {
+		return
+	}
+
+	broadcastPatientUpdate(hub, patient)
+}
+
 func (h *AlertHandler) ListUnresolvedAlerts(w http.ResponseWriter, r *http.Request) {
 	unresolvedAlerts, err := services.Alert.GetAll(&models.Alert{Resolved: false, Declined: false})
 	if err != nil {
@@ -114,6 +141,7 @@ func (h *AlertHandler) DeclineAlert(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast the updated alert to websocket clients
 	BroadcastAlertUpdate(h.hub, updatedAlert)
+	updatePatientStatusFromAlerts(h.hub, updatedAlert.PatientID)
 }
 
 func (h *AlertHandler) ResolveAlert(w http.ResponseWriter, r *http.Request) {
@@ -145,6 +173,7 @@ func (h *AlertHandler) ResolveAlert(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast the updated alert to websocket clients
 	BroadcastAlertUpdate(h.hub, updatedAlert)
+	updatePatientStatusFromAlerts(h.hub, updatedAlert.PatientID)
 }
 
 func AlertRoutes(hub *websockets.WsHub) chi.Router {
