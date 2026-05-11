@@ -34,13 +34,13 @@ void loop() {
   if (digitalRead(PIR_PIN)) {
     if (!pirState) {
       digitalWrite(PIR_LED_PIN, HIGH);
-      iot.publishMsg("sensor/pir", "1");
+      iot.publishMsg("event/motion", "1");
       pirState = true;
     }
   } else {
     if (pirState) {
       digitalWrite(PIR_LED_PIN, LOW);
-      iot.publishMsg("sensor/pir", "0");
+      iot.publishMsg("event/motion", "0");
       pirState = false;
     }
   }
