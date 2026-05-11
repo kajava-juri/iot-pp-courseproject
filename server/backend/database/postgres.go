@@ -112,6 +112,32 @@ func InitDb() error {
 		return err
 	}
 
+	var room1 models.Room
+	if err := db.First(&room1).Error; err != nil {
+		room1 = models.Room{RoomName: "Room 101"}
+		db.Create(&room1)
+	}
+
+	seedPatients := []models.Patient{
+		{Name: "John Doe", HealthID: "health_001", RoomID: room1.ID},
+		{Name: "Jane Smith", HealthID: "health_002", Status: "stable", RoomID: room1.ID},
+		{Name: "Michael Brown", HealthID: "health_003", Status: "recovering", RoomID: room1.ID},
+		{Name: "Emily Johnson", HealthID: "health_004", Status: "stable", RoomID: room1.ID},
+		{Name: "Daniel Wilson", HealthID: "health_005", Status: "under observation", RoomID: room1.ID},
+		{Name: "Olivia Davis", HealthID: "health_006", Status: "stable", RoomID: room1.ID},
+		{Name: "Matthew Miller", HealthID: "health_007", Status: "recovering", RoomID: room1.ID},
+		{Name: "Sophia Garcia", HealthID: "health_008", Status: "stable", RoomID: room1.ID},
+		{Name: "Andrew Martinez", HealthID: "health_009", Status: "under observation", RoomID: room1.ID},
+		{Name: "Isabella Anderson", HealthID: "health_010", Status: "stable", RoomID: room1.ID},
+		{Name: "James Thomas", HealthID: "health_011", Status: "recovering", RoomID: room1.ID},
+	}
+	for _, patient := range seedPatients {
+		var existing models.Patient
+		if err := db.Where("health_id = ?", patient.HealthID).FirstOrCreate(&existing, patient).Error; err != nil {
+			return fmt.Errorf("failed to seed patient %s: %w", patient.HealthID, err)
+		}
+	}
+
 	// populate data if not exists
 	var devExists bool
 	result := db.Raw("SELECT EXISTS(SELECT id FROM devices LIMIT 1)").Scan(&devExists)
@@ -121,14 +147,9 @@ func InitDb() error {
 	if !devExists {
 		// populate initial data
 		// Room
-		room1 := models.Room{RoomName: "Room 101"}
-		db.Create(&room1)
 		for i := 102; i <= 211; i++ {
 			db.Create(&models.Room{RoomName: fmt.Sprintf("A%d", i)})
 		}
-
-		// Patient
-		db.Create(&models.Patient{Name: "John Doe", HealthID: "health_001", RoomID: room1.ID})
 		// Device
 		patientID := uint(1)
 		roomID := room1.ID

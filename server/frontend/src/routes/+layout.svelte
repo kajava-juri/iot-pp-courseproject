@@ -6,13 +6,14 @@
   import Header from "$components/Header.svelte";
   import Sidemenu from "$components/Sidemenu.svelte";
   import { alertsStore } from "$stores/alerts";
-  import { toasts, removeToast } from "$stores/toasts";
+  import { toasts, removeToast, addToast } from "$stores/toasts";
   import Alerts from "$components/Alerts.svelte";
   import { WsMessageStore } from "$stores/ws_store";
   import { fetcher } from "../utils/fetcher";
   import {
     tryParseAlert,
     tryParseAlerts,
+    tryParseEvent,
     type Alert as DbAlert,
   } from "$types/healthcare-db-types";
   import AlertItem from "$components/AlertItem.svelte";
@@ -53,14 +54,31 @@
         // event/motion event toast
         if (currentMessage.topic.includes("/event/motion")) {
 
-          let toastId: string = crypto.randomUUID();
-          newAlerts = [
-            ...newAlerts,
-            { toastId, alertId: -1 }, // alertId is not applicable for motion events
-          ];
-          setTimeout(() => {
-            newAlerts = newAlerts.filter((item) => item.toastId !== toastId);
-          }, 4000);
+          let eventDataJson = currentMessage.payload;
+          try {
+            let eventData = tryParseEvent(eventDataJson);
+            if (!eventData.success) {
+              console.error(
+                "Failed to parse motion event data from WebSocket message:",
+                eventData.error,
+              );
+              return;
+            }
+            console.log("Parsed motion event data:", eventData);
+            addToast(`Motion detected in ${eventData.data.room?.room_name || 'Unknown Room'}!`, "info", 4000);
+          } catch (error) {
+            console.error("Failed to parse motion event data:", error);
+          }
+
+          // let toastId: string = crypto.randomUUID();
+          // newAlerts = [
+          //   ...newAlerts,
+          //   { toastId, alertId: -1 }, // alertId is not applicable for motion events
+          // ];
+          // setTimeout(() => {
+          //   newAlerts = newAlerts.filter((item) => item.toastId !== toastId);
+          // }, 4000);
+
         }
 
         if (currentMessage.topic.includes("/alert")) {
