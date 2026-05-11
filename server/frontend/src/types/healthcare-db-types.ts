@@ -117,6 +117,42 @@ export type AlertArray = z.infer<typeof AlertArraySchema>;
 export const EventArraySchema = z.array(EventSchema);
 export type EventArray = z.infer<typeof EventArraySchema>;
 
+export const DeviceSchema = z.object({
+  ID: z.number(),
+  CreatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  UpdatedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)),
+  DeletedAt: z.string().datetime().transform((val: string | number | Date) => new Date(val)).nullable(),
+  device_name: z.string(),
+  name: z.string().optional(),
+  uptime_ms: z.number().optional(),
+  description: z.string().nullable().optional(),
+  room_id: z.number().nullable().optional(),
+  room: RoomSchema.nullable().optional(),
+  patient_id: z.number().nullable().optional(),
+  patient: PatientSchema.nullable().optional(),
+});
+
+export type Device = z.infer<typeof DeviceSchema>;
+
+export const DeviceArraySchema = z.array(DeviceSchema);
+export type DeviceArray = z.infer<typeof DeviceArraySchema>;
+
+export function tryParseDevice(data: unknown): ParseResult<Device> {
+  try {
+    return { success: true, data: DeviceSchema.parse(data) };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+export function tryParseDevices(data: unknown): ParseResult<DeviceArray> {
+  try {
+    return { success: true, data: DeviceArraySchema.parse(data) };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
 // Parse single items
 export function parseAlert(data: unknown): Alert {
   return AlertSchema.parse(data);

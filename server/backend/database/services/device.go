@@ -57,3 +57,29 @@ func (s DeviceService) Delete(id uint) error {
 	}
 	return nil
 }
+
+func (s DeviceService) Update(device *models.Device) error {
+	if device == nil {
+		return fmt.Errorf("device cannot be nil")
+	}
+	if device.ID == 0 {
+		return fmt.Errorf("device ID is required")
+	}
+
+	// Only allow updating mutable fields: Description, RoomID, PatientID
+	updates := map[string]any{
+		"description": device.Description,
+		"room_id":     device.RoomID,
+		"patient_id":  device.PatientID,
+	}
+
+	result := postgres.DB().Model(&models.Device{}).Where("id = ?", device.ID).Updates(updates)
+	if result.Error != nil {
+		return fmt.Errorf("failed to update device %d: %w", device.ID, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("device %d not found", device.ID)
+	}
+
+	return nil
+}

@@ -40,6 +40,10 @@
                 {/snippet}
 
             </SidebarItem>
+            <SidebarItem label="Devices" href="/devices">
+
+
+            </SidebarItem>
         </SidebarGroup>
     </Sidebar>
 </div>
