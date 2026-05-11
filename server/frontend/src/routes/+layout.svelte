@@ -6,6 +6,7 @@
   import Header from "$components/Header.svelte";
   import Sidemenu from "$components/Sidemenu.svelte";
   import { alertsStore } from "$stores/alerts";
+  import { toasts, removeToast } from "$stores/toasts";
   import Alerts from "$components/Alerts.svelte";
   import { WsMessageStore } from "$stores/ws_store";
   import { fetcher } from "../utils/fetcher";
@@ -226,6 +227,14 @@
         <Alert dismissable onclose={() => dismissToast(item.toastId)}>
           {#snippet icon()}<InfoCircleSolid class="h-5 w-5" />{/snippet}
           New alert added! (ID: {item.alertId})
+        </Alert>
+      </div>
+    {/each}
+    {#each $toasts as t (t.id)}
+      <div class="pointer-events-auto">
+        <Alert dismissable onclose={() => removeToast(t.id)}>
+          {#snippet icon()}<InfoCircleSolid class="h-5 w-5" />{/snippet}
+          {t.message}
         </Alert>
       </div>
     {/each}

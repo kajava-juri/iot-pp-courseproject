@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { Label, Input, Helper, Button } from "flowbite-svelte";
+    import { Label, Input, Helper, Button, Alert } from "flowbite-svelte";
+    import { addToast } from "$stores/toasts";
     import { tryParseRooms, type RoomArray } from "$types/healthcare-db-types";
     import { fetcher } from "../../utils/fetcher";
     import { onMount } from "svelte";
@@ -18,6 +19,8 @@
     let healthID = $state<string>("");
     let formError = $state<string>("");
     let formErrorMap = $state<Record<string, string>>({});
+    let showSuccess = $state<boolean>(false);
+    let successMessage = $state<string>("");
 
     $effect(() => {
         console.log("Selected room ID:", selectedRoomId);
@@ -68,6 +71,21 @@
                 health_id: healthID,
                 room_id: selectedRoomId ? parseInt(selectedRoomId) : undefined,
             });
+
+            // On success: clear fields and show success alert
+            patientName = "";
+            healthID = "";
+            selectedRoomId = "";
+            formError = "";
+            formErrorMap = {};
+            successMessage = "Patient created successfully";
+            showSuccess = true;
+
+            // auto-hide after 3.5s
+            setTimeout(() => (showSuccess = false), 3500);
+
+            // global toast
+            addToast(successMessage, 'success', 3500);
         } catch (error: any) {
             console.error("Error creating patient:", error);
             formError = `Failed to create patient: ${error?.data || error.message}`;
