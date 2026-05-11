@@ -47,12 +47,14 @@
 			<TableHeadCell>ID</TableHeadCell>
 			<TableHeadCell>Type</TableHeadCell>
 			<TableHeadCell>Device ID</TableHeadCell>
+			<TableHeadCell>Patient</TableHeadCell>
+			<TableHeadCell>Room</TableHeadCell>
 			<TableHeadCell>Created At</TableHeadCell>
 		</TableHead>
 		<TableBody>
 			{#if filteredEvents.length === 0}
 				<TableBodyRow>
-					<TableBodyCell colspan={4} class="text-center text-gray-500">
+					<TableBodyCell colspan={6} class="text-center text-gray-500">
 						No events available.
 					</TableBodyCell>
 				</TableBodyRow>
@@ -62,6 +64,8 @@
 						<TableBodyCell>{event.ID}</TableBodyCell>
 						<TableBodyCell>{event.type}</TableBodyCell>
 						<TableBodyCell>{event.device_id}</TableBodyCell>
+						<TableBodyCell>{event.patient?.name || 'N/A'}</TableBodyCell>
+						<TableBodyCell>{event.room?.room_name || 'N/A'}</TableBodyCell>
 						<TableBodyCell>{formatDate(event.CreatedAt)}</TableBodyCell>
 					</TableBodyRow>
 				{/each}

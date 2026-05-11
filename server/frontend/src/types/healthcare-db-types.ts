@@ -86,6 +86,7 @@ export const EventSchema = z.object({
   device_id: z.number(),
   type: EventTypeEnum,
   room: RoomSchema.nullable().optional(),
+  patient: PatientSchema.nullable().optional(),
 });
 
 export type Event = z.infer<typeof EventSchema>;
