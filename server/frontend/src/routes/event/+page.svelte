@@ -16,7 +16,7 @@
 			event.type.toLowerCase().includes(query) ||
 			String(event.device_id).includes(query) ||
 			String(event.ID).includes(query)
-		);
+		).sort((a, b) => b.CreatedAt.getTime() - a.CreatedAt.getTime());
 	});
 
 	onMount(async () => {
@@ -25,7 +25,7 @@
 			const parsed = tryParseEvents(response.data);
 
 			if (parsed.success) {
-				events = parsed.data;
+				events = parsed.data.sort((a, b) => b.CreatedAt.getTime() - a.CreatedAt.getTime());
 			} else {
 				console.error('Failed to parse events:', parsed.error);
 			}

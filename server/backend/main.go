@@ -49,6 +49,7 @@ func main() {
 	log.Printf("MQTT Config: %+v", mqttConfig)
 
 	imuTopicPrefix := utils.GetEnv("WEARABLE_IMU_TOPIC_PREFIX", "ESP16")
+	roomTopicPrefix := utils.GetEnv("ROOM_SENSOR_TOPIC_PREFIX", "ESP60")
 	fallTopic := utils.GetEnv("FALL_EVENT_TOPIC", "event/fall")
 
 	subs := []mqttClient.Subscription{
@@ -61,6 +62,11 @@ func main() {
 			Topic:   imuTopicPrefix + "/event/vibration",
 			Qos:     1,
 			Handler: handlers.VibrationEventMessageHandler(wsHub),
+		},
+		{
+			Topic:   roomTopicPrefix + "/event/motion",
+			Qos:     1,
+			Handler: handlers.MotionEventMessageHandler(wsHub),
 		},
 	}
 
@@ -135,6 +141,7 @@ func main() {
 	r.Mount("/alert", routes.AlertRoutes(wsHub))
 	r.Mount("/patient", routes.PatientRoutes())
 	r.Mount("/room", routes.RoomRoutes())
+	r.Mount("/device", routes.DeviceRoutes())
 	r.Mount("/event", routes.EventRoutes())
 
 	// 4. Run the Server
