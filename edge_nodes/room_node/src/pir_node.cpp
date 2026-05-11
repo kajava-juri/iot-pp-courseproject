@@ -14,6 +14,8 @@ void iot_connected() {
 
 void setup() {
   Serial.begin(115200);
+  while (!Serial)
+    delay(10);
 
   pinMode(PIR_PIN, INPUT);
   pinMode(PIR_LED_PIN, OUTPUT);

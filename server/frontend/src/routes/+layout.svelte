@@ -50,6 +50,19 @@
       if (currentMessage) {
         console.log("Received WebSocket message:", currentMessage);
 
+        // event/motion event toast
+        if (currentMessage.topic.includes("/event/motion")) {
+
+          let toastId: string = crypto.randomUUID();
+          newAlerts = [
+            ...newAlerts,
+            { toastId, alertId: -1 }, // alertId is not applicable for motion events
+          ];
+          setTimeout(() => {
+            newAlerts = newAlerts.filter((item) => item.toastId !== toastId);
+          }, 4000);
+        }
+
         if (currentMessage.topic.includes("/alert")) {
           let alertDataJson = currentMessage.payload;
           try {

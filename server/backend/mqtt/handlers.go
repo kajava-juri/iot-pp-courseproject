@@ -152,6 +152,10 @@ func MotionEventMessageHandler(wsHub *websockets.WsHub) mqtt.MessageHandler {
 			return
 		}
 
+		// if no motion, payload = 0, do not broadcast to frontend since it is not an actionable event and would only add noise
+		if payload == "0" {
+			return
+		}
 		wsHub.BroadcastToTopic(eventJSON, topic)
 	}
 }

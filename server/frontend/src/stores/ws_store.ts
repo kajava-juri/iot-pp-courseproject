@@ -8,6 +8,7 @@ const WsSocketStore = writable<WebSocket | null>(null);
 let hostname = import.meta.env.VITE_SERVER_HOSTNAME || 'localhost';
 
 const topicPrefix = import.meta.env.VITE_WEARABLE_IMU_TOPIC_PREFIX;
+const motionTopicPrefix = import.meta.env.VITE_ROOM_SENSOR_TOPIC_PREFIX;
 
 const socket = new WebSocket(`ws://${hostname}:${import.meta.env.VITE_WEB_PORT}/ws`);
 
@@ -21,7 +22,8 @@ socket.onopen = () => {
       `${topicPrefix}/${import.meta.env.VITE_FALL_EVENT_TOPIC}`,
       `${topicPrefix}/${import.meta.env.VITE_ALERT_TOPIC}`,
       `${import.meta.env.VITE_ALERT_UPDATE_TOPIC}`,
-      `${topicPrefix}/alert/vibration`
+      `${topicPrefix}/alert/vibration`,
+      `${motionTopicPrefix}/event/motion`
     ]
   }))
 };
