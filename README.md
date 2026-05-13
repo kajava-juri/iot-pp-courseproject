@@ -29,14 +29,14 @@ root/
 
 ## Server (Docker)
 
-Three containers are orchestrated with `docker-compose.yml`:
+Containers are orchestrated with `docker-compose.yml`:
 
 | Service      | Port(s)        | Description                       |
 |--------------|----------------|------------------------------------|
 | `frontend`   | 3000           | Svelte front-end (Vite dev server) |
 | `mosquitto`  | 1883 / 9001    | MQTT broker (TCP + WebSocket)      |
 | `nodered`    | 1880           | Node-RED flow editor               |
-| `backend`    | 8081           | Serves HTTP API, Websockets and handles edge nodes MQTT messages |
+| `backend`    | 8080.          | Serves HTTP API, Websockets and handles edge nodes MQTT messages |
 | `pgadmin`    | 5050           | Web based postgres database manager |
 | `postgres`   | 5432           | PostgreSQL database contianer |
 
